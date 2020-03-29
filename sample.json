@@ -1,0 +1,13 @@
+[
+    {
+        "schedule": {
+            "frequency": "1h"
+        },
+        "filters": {
+            "organization": "name ne 'system'",
+            "space": "name eq 'test'",
+            "application": "state eq 'STARTED' and age gt 3h",
+            "action": "stop"
+        }
+    }
+] 
