@@ -12,38 +12,44 @@ import (
 )
 
 type Options struct {
-	TaskEnvVar          func(string) `short:"e" long:"env" default:"SCULLION_TASKS" description:"load configuration from environment variable"`
-	TaskFileName        func(string) `short:"f" long:"file" description:"read configuration from given file"`
-	Verbose             []bool       `short:"v" long:"verbose" description:"enable verbose output"`
-	CfAPI               string       `short:"a" long:"api" env:"CF_API" description:"Cloud Foundry API URL" required:"yes"`
-	CfUsername          string       `short:"u" long:"username" env:"CF_USERNAME" description:"Cloud Foundry username" required:"yes"`
-	CfPassword          string       `short:"p" long:"password" env:"CF_PASSWORD" description:"Cloud Foundry password" required:"yes"`
-	CfSkipSslValidation bool         `short:"k" long:"skip-ssl-validation" env:"CF_SKIP_SSL_VALIDATION" description:"Skip SSL validation of Cloud Foundry endpoint. Not recommended."`
+	TaskOptions         `group:"Task Options" required:"yes"`
+	Verbose             []bool `short:"v" long:"verbose" description:"enable verbose output"`
+	CloudFoundryOptions `group:"Cloud Foundry Configuration"`
+}
+type TaskOptions struct {
+	EnvVar   func(string) `short:"e" long:"env" default:"SCULLION_TASKS" description:"load configuration from environment variable"`
+	FileName func(string) `short:"f" long:"file" description:"read configuration from given file"`
+}
+type CloudFoundryOptions struct {
+	API               string `short:"a" long:"api" env:"CF_API" description:"API URL" required:"yes"`
+	Username          string `short:"u" long:"username" env:"CF_USERNAME" description:"Username" required:"yes"`
+	Password          string `short:"p" long:"password" env:"CF_PASSWORD" description:"Password" required:"yes"`
+	SkipSslValidation bool   `short:"k" long:"skip-ssl-validation" env:"CF_SKIP_SSL_VALIDATION" description:"Skip SSL validation of Cloud Foundry endpoint. Not recommended."`
 }
 
 var tasks []Task
 
 func main() {
 	var options Options
-	options.TaskEnvVar = readConfigurationFromString
-	options.TaskFileName = readConfigurationFromFile
+	options.TaskOptions.EnvVar = readConfigurationFromString
+	options.TaskOptions.FileName = readConfigurationFromFile
 	parser := flags.NewParser(&options, flags.Default)
 	_, err := parser.Parse()
 	if err != nil {
-		os.Exit(0)
+		fmt.Println(err)
+		os.Exit(1)
 	}
 
-	fmt.Printf("%v\n", tasks)
-
-	// fmt.Println("Please supply a file or an environment variable for configuration")
-	// flag.Usage()
-	// os.Exit(1)
+	if len(tasks) == 0 {
+		fmt.Println("Please supply a file or an environment variable for configuration")
+		os.Exit(1)
+	}
 
 	c := &cfclient.Config{
-		ApiAddress:        options.CfAPI,
-		Username:          options.CfUsername,
-		Password:          options.CfPassword,
-		SkipSslValidation: options.CfSkipSslValidation,
+		ApiAddress:        options.API,
+		Username:          options.Username,
+		Password:          options.Password,
+		SkipSslValidation: options.SkipSslValidation,
 	}
 	client, err := cfclient.NewClient(c)
 	if err != nil {
@@ -70,7 +76,11 @@ func loadTasks(config []byte) {
 
 func readConfigurationFromString(envName string) {
 	if envName != "" {
-		loadTasks([]byte(os.Getenv(envName)))
+		envValue := os.Getenv(envName)
+		if envValue != "" {
+			fmt.Printf("Using environment variable %s", envName)
+			loadTasks([]byte(envValue))
+		}
 	}
 }
 
