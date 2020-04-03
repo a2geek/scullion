@@ -2,57 +2,85 @@ package main
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
 	"io/ioutil"
+	"net/url"
 	"os"
+
+	"github.com/cloudfoundry-community/go-cfclient"
+	"github.com/jessevdk/go-flags"
 )
 
+type Options struct {
+	TaskEnvVar          func(string) `short:"e" long:"env" default:"SCULLION_TASKS" description:"load configuration from environment variable"`
+	TaskFileName        func(string) `short:"f" long:"file" description:"read configuration from given file"`
+	Verbose             []bool       `short:"v" long:"verbose" description:"enable verbose output"`
+	CfAPI               string       `short:"a" long:"api" env:"CF_API" description:"Cloud Foundry API URL" required:"yes"`
+	CfUsername          string       `short:"u" long:"username" env:"CF_USERNAME" description:"Cloud Foundry username" required:"yes"`
+	CfPassword          string       `short:"p" long:"password" env:"CF_PASSWORD" description:"Cloud Foundry password" required:"yes"`
+	CfSkipSslValidation bool         `short:"k" long:"skip-ssl-validation" env:"CF_SKIP_SSL_VALIDATION" description:"Skip SSL validation of Cloud Foundry endpoint. Not recommended."`
+}
+
+var tasks []Task
+
 func main() {
-	envName := flag.String("env", "SCULLION_TASKS", "load configuration from environment `variable`")
-	fileName := flag.String("file", "", "read configuration from given `file`")
-	verbose := flag.Bool("verbose", false, "enable verbose output")
-	flag.Parse()
-
-	readConfigFunc := evaluateFlags(envName, fileName, verbose)
-
-	config := readConfigFunc()
-	fmt.Println(string(config))
-	tasks := loadTasks(config)
-	fmt.Printf("%v\n", tasks)
-}
-
-func evaluateFlags(envName, fileName *string, verbose *bool) func() []byte {
-	var readConfigFunc func() []byte
-	if *fileName != "" {
-		readConfigFunc = func() []byte { return readConfigurationFromFile(*fileName) }
-	} else if *envName != "" {
-		readConfigFunc = func() []byte { return []byte(os.Getenv(*envName)) }
-	} else {
-		fmt.Println("Please supply a file or an environment variable for configuration")
-		flag.Usage()
-		os.Exit(1)
+	var options Options
+	options.TaskEnvVar = readConfigurationFromString
+	options.TaskFileName = readConfigurationFromFile
+	parser := flags.NewParser(&options, flags.Default)
+	_, err := parser.Parse()
+	if err != nil {
+		os.Exit(0)
 	}
-	return readConfigFunc
+
+	fmt.Printf("%v\n", tasks)
+
+	// fmt.Println("Please supply a file or an environment variable for configuration")
+	// flag.Usage()
+	// os.Exit(1)
+
+	c := &cfclient.Config{
+		ApiAddress:        options.CfAPI,
+		Username:          options.CfUsername,
+		Password:          options.CfPassword,
+		SkipSslValidation: options.CfSkipSslValidation,
+	}
+	client, err := cfclient.NewClient(c)
+	if err != nil {
+		panic(err)
+	}
+	q := url.Values{}
+	apps, err := client.ListAppsByQuery(q)
+	if err != nil {
+		panic(err)
+	}
+	for _, app := range apps {
+		fmt.Printf("Name: %s (%d instances)\n", app.Name, app.Instances)
+	}
 }
 
-func loadTasks(config []byte) []Task {
-	tasks := make([]Task, 0)
+func loadTasks(config []byte) {
+	tasks = make([]Task, 0)
 	err := json.Unmarshal(config, &tasks)
 	if err != nil {
 		fmt.Printf("Unable to unmarshal configuration: %v\n", err)
 		os.Exit(3)
 	}
-	return tasks
 }
 
-func readConfigurationFromFile(fileName string) []byte {
+func readConfigurationFromString(envName string) {
+	if envName != "" {
+		loadTasks([]byte(os.Getenv(envName)))
+	}
+}
+
+func readConfigurationFromFile(fileName string) {
 	data, err := ioutil.ReadFile(fileName)
 	if err != nil {
 		fmt.Printf("Unable to read configuration: %v\n", err)
 		os.Exit(2)
 	}
-	return data
+	loadTasks(data)
 }
 
 type Task struct {
