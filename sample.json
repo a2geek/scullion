@@ -1,12 +1,13 @@
 [
     {
+        "name": "a sample",
         "schedule": {
-            "frequency": "1h"
+            "frequency": "1m"
         },
         "filters": {
-            "organization": "name ne 'system'",
-            "space": "name eq 'test'",
-            "application": "state eq 'STARTED' and age gt 3h",
+            "organization": "Org.Name != 'system'",
+            "space": "space.name == 'test'",
+            "application": "app.state == 'STARTED'",
             "action": "stop"
         }
     }
