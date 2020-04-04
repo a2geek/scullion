@@ -6,7 +6,7 @@ github.com/Masterminds/semver
 github.com/cloudfoundry-community/go-cfclient
 # github.com/golang/protobuf v1.2.0
 github.com/golang/protobuf/proto
-# github.com/jessevdk/go-flags v1.4.0
+# github.com/jessevdk/go-flags v1.4.1-0.20181221193153-c0795c8afcf4
 github.com/jessevdk/go-flags
 # github.com/pkg/errors v0.8.1
 github.com/pkg/errors

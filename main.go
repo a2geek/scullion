@@ -13,18 +13,24 @@ import (
 
 type Options struct {
 	TaskOptions         `group:"Task Options" required:"yes"`
+	WorkerPools         `group:"Worker Pools" namespace:"worker" env-namespace:"WORKER"`
 	Verbose             []bool `short:"v" long:"verbose" description:"enable verbose output"`
-	CloudFoundryOptions `group:"Cloud Foundry Configuration"`
+	CloudFoundryOptions `group:"Cloud Foundry Configuration" namespace:"cf" env-namespace:"CF" reqired:"yes"`
 }
 type TaskOptions struct {
 	EnvVar   func(string) `short:"e" long:"env" default:"SCULLION_TASKS" description:"load configuration from environment variable"`
 	FileName func(string) `short:"f" long:"file" description:"read configuration from given file"`
 }
+type WorkerPools struct {
+	OrgPool   int `long:"org-pool" env:"ORG_POOL" default:"1" description:"set the number of organization workers in the pool"`
+	SpacePool int `long:"space-pool" env:"SPACE_POOL" default:"1" description:"set the number of space workers in the pool"`
+	AppPool   int `long:"app-pool" env:"APP_POOL" default:"1" description:"set the number of application workers in the pool"`
+}
 type CloudFoundryOptions struct {
-	API               string `short:"a" long:"api" env:"CF_API" description:"API URL" required:"yes"`
-	Username          string `short:"u" long:"username" env:"CF_USERNAME" description:"Username" required:"yes"`
-	Password          string `short:"p" long:"password" env:"CF_PASSWORD" description:"Password" required:"yes"`
-	SkipSslValidation bool   `short:"k" long:"skip-ssl-validation" env:"CF_SKIP_SSL_VALIDATION" description:"Skip SSL validation of Cloud Foundry endpoint. Not recommended."`
+	API               string `short:"a" long:"api" env:"API" description:"API URL"`
+	Username          string `short:"u" long:"username" env:"USERNAME" description:"Username"`
+	Password          string `short:"p" long:"password" env:"PASSWORD" description:"Password"`
+	SkipSslValidation bool   `short:"k" long:"skip-ssl-validation" env:"SKIP_SSL_VALIDATION" description:"Skip SSL validation of Cloud Foundry endpoint. Not recommended."`
 }
 
 var tasks []Task
@@ -34,9 +40,12 @@ func main() {
 	options.TaskOptions.EnvVar = readConfigurationFromString
 	options.TaskOptions.FileName = readConfigurationFromFile
 	parser := flags.NewParser(&options, flags.Default)
+	parser.NamespaceDelimiter = "-"
 	_, err := parser.Parse()
 	if err != nil {
-		fmt.Println(err)
+		if !flags.WroteHelp(err) {
+			fmt.Println(err)
+		}
 		os.Exit(1)
 	}
 
@@ -63,6 +72,13 @@ func main() {
 	for _, app := range apps {
 		fmt.Printf("Name: %s (%d instances)\n", app.Name, app.Instances)
 	}
+
+	// 3 worker pools, configured by env/flags for size:
+	//   <-(Filter, Org)
+	//   <-(Filter, Space)
+	//   <-(Filter, App)
+	// Per task worker:
+	//   <-(Tick) and delivers to proper pool based on starting filter
 }
 
 func loadTasks(config []byte) {
@@ -78,7 +94,7 @@ func readConfigurationFromString(envName string) {
 	if envName != "" {
 		envValue := os.Getenv(envName)
 		if envValue != "" {
-			fmt.Printf("Using environment variable %s", envName)
+			fmt.Printf("Using environment variable %s\n", envName)
 			loadTasks([]byte(envValue))
 		}
 	}
