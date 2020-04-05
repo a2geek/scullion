@@ -30,6 +30,7 @@ type Options struct {
 type TaskOptions struct {
 	EnvVar   func(string) `short:"e" long:"env" default:"SCULLION_TASKS" description:"load configuration from environment variable"`
 	FileName func(string) `short:"f" long:"file" description:"read configuration from given file"`
+	Validate bool         `long:"validate" description:"validate task code"`
 }
 type WorkerPools struct {
 	OrgPool    int `long:"org-pool" env:"ORG_POOL" default:"1" description:"set the number of organization workers in the pool"`

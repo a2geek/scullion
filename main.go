@@ -31,6 +31,15 @@ func main() {
 		fmt.Println("Please supply a file or an environment variable for configuration")
 		os.Exit(1)
 	}
+	if options.TaskOptions.Validate {
+		if !Validate(tasks) {
+			fmt.Println("Some tasks and schedules DID NOT pass validation.")
+			os.Exit(1)
+		} else {
+			fmt.Println("All tasks and schedules passed validation.")
+			os.Exit(0)
+		}
+	}
 
 	orgChan := make(chan TaskItem)
 	spaceChan := make(chan TaskItem)
@@ -70,19 +79,18 @@ func main() {
 	<-termChan
 }
 
-func taskWorker(num int, task Task, client *cfclient.Client, orgChan chan<- TaskItem) {
-	fmt.Printf("Launched task worker %d\n", num)
+func createMetadata(task Task, client *cfclient.Client) (TaskMetadata, error) {
 	orgExpr, err := expr.Compile(task.Filters.Organization)
 	if err != nil {
-		panic(err)
+		return TaskMetadata{}, err
 	}
 	spaceExpr, err := expr.Compile(task.Filters.Space)
 	if err != nil {
-		panic(err)
+		return TaskMetadata{}, err
 	}
 	appExpr, err := expr.Compile(task.Filters.Application)
 	if err != nil {
-		panic(err)
+		return TaskMetadata{}, err
 	}
 	metadata := TaskMetadata{
 		Name:      task.Name,
@@ -91,6 +99,15 @@ func taskWorker(num int, task Task, client *cfclient.Client, orgChan chan<- Task
 		SpaceExpr: spaceExpr,
 		AppExpr:   appExpr,
 		Action:    logAction,
+	}
+	return metadata, nil
+}
+
+func taskWorker(num int, task Task, client *cfclient.Client, orgChan chan<- TaskItem) {
+	fmt.Printf("Launched task worker %d\n", num)
+	metadata, err := createMetadata(task, client)
+	if err != nil {
+		panic(err)
 	}
 	dur, err := time.ParseDuration(task.Schedule.Frequency)
 	if err != nil {
@@ -127,17 +144,24 @@ type TaskMetadata struct {
 	Action    func(TaskItem)
 }
 
-func isTrue(i interface{}) bool {
-	switch i.(type) {
+func IsTrue(i interface{}) (bool, error) {
+	switch t := i.(type) {
 	case int:
-		return i != 0
+		return i != 0, nil
 	case string:
-		return i != ""
+		return i != "", nil
 	case bool:
-		return i.(bool)
+		return i.(bool), nil
 	default:
-		panic("unknown type")
+		return false, fmt.Errorf("unable to test type '%s'", t)
 	}
+}
+func isTrue(i interface{}) bool {
+	b, err := IsTrue(i)
+	if err != nil {
+		panic(err)
+	}
+	return b
 }
 
 func orgWorker(num int, orgChan <-chan TaskItem, spaceChan chan<- TaskItem) {
