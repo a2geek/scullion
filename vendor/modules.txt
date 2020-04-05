@@ -2,22 +2,33 @@
 code.cloudfoundry.org/gofileutils/fileutils
 # github.com/Masterminds/semver v1.4.2
 github.com/Masterminds/semver
+# github.com/antonmedv/expr v1.8.2
+github.com/antonmedv/expr
+github.com/antonmedv/expr/ast
+github.com/antonmedv/expr/checker
+github.com/antonmedv/expr/compiler
+github.com/antonmedv/expr/conf
+github.com/antonmedv/expr/file
+github.com/antonmedv/expr/optimizer
+github.com/antonmedv/expr/parser
+github.com/antonmedv/expr/parser/lexer
+github.com/antonmedv/expr/vm
 # github.com/cloudfoundry-community/go-cfclient v0.0.0-20190808214049-35bcce23fc5f
 github.com/cloudfoundry-community/go-cfclient
-# github.com/golang/protobuf v1.2.0
+# github.com/golang/protobuf v1.3.2
 github.com/golang/protobuf/proto
 # github.com/jessevdk/go-flags v1.4.1-0.20181221193153-c0795c8afcf4
 github.com/jessevdk/go-flags
 # github.com/pkg/errors v0.8.1
 github.com/pkg/errors
-# golang.org/x/net v0.0.0-20190311183353-d8887717615a
+# golang.org/x/net v0.0.0-20190503192946-f4e77d36d62c
 golang.org/x/net/context
 golang.org/x/net/context/ctxhttp
-# golang.org/x/oauth2 v0.0.0-20190130055435-99b60b757ec1
+# golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 golang.org/x/oauth2
 golang.org/x/oauth2/clientcredentials
 golang.org/x/oauth2/internal
-# google.golang.org/appengine v1.4.0
+# google.golang.org/appengine v1.5.0
 google.golang.org/appengine/internal
 google.golang.org/appengine/internal/base
 google.golang.org/appengine/internal/datastore
