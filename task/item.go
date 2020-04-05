@@ -1,6 +1,6 @@
 package task
 
-type TaskItem struct {
-	Variables TaskVariables
-	Metadata  TaskMetadata
+type Item struct {
+	Variables Variables
+	Metadata  Metadata
 }

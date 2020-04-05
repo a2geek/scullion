@@ -17,11 +17,11 @@ import (
 	"github.com/cloudfoundry-community/go-cfclient"
 )
 
-type ValidateCommand struct {
+type Validate struct {
 	option.TaskOptions `group:"Task Options"`
 }
 
-func (cmd *ValidateCommand) Execute(args []string) error {
+func (cmd *Validate) Execute(args []string) error {
 	taskDefs, err := cmd.ReadConfiguration()
 	if err != nil {
 		return err
@@ -37,7 +37,7 @@ func (cmd *ValidateCommand) Execute(args []string) error {
 	return nil
 }
 
-func (cmd *ValidateCommand) validate(taskDefs []config.TaskDef) bool {
+func (cmd *Validate) validate(taskDefs []config.TaskDef) bool {
 	fails := 0
 
 	var org cfclient.Org
@@ -61,14 +61,14 @@ func (cmd *ValidateCommand) validate(taskDefs []config.TaskDef) bool {
 		fails++
 	}
 
-	orgVar := task.TaskVariables{
+	orgVar := task.Variables{
 		Org: org,
 	}
-	spaceVar := task.TaskVariables{
+	spaceVar := task.Variables{
 		Org:   org,
 		Space: space,
 	}
-	appVar := task.TaskVariables{
+	appVar := task.Variables{
 		Org:   org,
 		Space: space,
 		App:   app,
@@ -95,7 +95,7 @@ func (cmd *ValidateCommand) validate(taskDefs []config.TaskDef) bool {
 	return fails == 0
 }
 
-func (cmd *ValidateCommand) validateExpression(taskName, testName string, pgm *vm.Program, vars task.TaskVariables) int {
+func (cmd *Validate) validateExpression(taskName, testName string, pgm *vm.Program, vars task.Variables) int {
 	result, err := expr.Run(pgm, vars)
 	if err != nil {
 		fmt.Printf("Unable to evaluate task '%s' %s expression: %s\n", taskName, testName, err)

@@ -10,8 +10,8 @@ import (
 )
 
 type TaskOptions struct {
-	EnvVar   string `short:"e" long:"env" default:"SCULLION_TASKS" description:"load configuration from environment variable"`
-	FileName string `short:"f" long:"file" description:"read configuration from given file"`
+	EnvVar   string `short:"e" long:"env" default:"SCULLION_TASKS" description:"Load configuration from environment variable"`
+	FileName string `short:"f" long:"file" description:"Read configuration from given file"`
 }
 
 func (o *TaskOptions) loadTaskDefs(data []byte) ([]config.TaskDef, error) {

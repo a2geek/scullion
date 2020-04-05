@@ -8,7 +8,7 @@ import (
 	"github.com/antonmedv/expr"
 )
 
-func Org(num int, orgChan <-chan task.TaskItem, spaceChan chan<- task.TaskItem) {
+func Org(num int, orgChan <-chan task.Item, spaceChan chan<- task.Item) {
 	fmt.Printf("Launched org worker %d\n", num)
 	for {
 		taskItem := <-orgChan
@@ -17,7 +17,7 @@ func Org(num int, orgChan <-chan task.TaskItem, spaceChan chan<- task.TaskItem) 
 			panic(err)
 		}
 		for _, org := range orgs {
-			variables := task.TaskVariables{
+			variables := task.Variables{
 				Org: org,
 			}
 			result, err := expr.Run(taskItem.Metadata.OrgExpr, variables)
@@ -30,7 +30,7 @@ func Org(num int, orgChan <-chan task.TaskItem, spaceChan chan<- task.TaskItem) 
 			}
 			if isTrue {
 				fmt.Printf("[%s] Matched org '%s'\n", taskItem.Metadata.Name, org.Name)
-				newTask := task.TaskItem{
+				newTask := task.Item{
 					Variables: variables,
 					Metadata:  taskItem.Metadata,
 				}

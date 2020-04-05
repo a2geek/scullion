@@ -7,10 +7,10 @@ import (
 )
 
 type Options struct {
-	Verbose []bool `short:"v" long:"verbose" description:"enable verbose output"`
+	Verbose []bool `short:"v" long:"verbose" description:"Enable verbose output"`
 
-	Run      cmd.RunCommand      `command:"run" alias:"r"`
-	Validate cmd.ValidateCommand `command:"validate" alias:"v"`
+	Run      cmd.Run      `command:"run" alias:"r"`
+	Validate cmd.Validate `command:"validate" alias:"v"`
 }
 
 func main() {

@@ -5,7 +5,7 @@ import (
 	"scullion/task"
 )
 
-func Action(num int, actionChan <-chan task.TaskItem) {
+func Action(num int, actionChan <-chan task.Item) {
 	fmt.Printf("Launched action worker %d\n", num)
 	for {
 		taskItem := <-actionChan

@@ -9,7 +9,7 @@ import (
 	"github.com/antonmedv/expr"
 )
 
-func Space(num int, spaceChan <-chan task.TaskItem, appChan chan<- task.TaskItem) {
+func Space(num int, spaceChan <-chan task.Item, appChan chan<- task.Item) {
 	fmt.Printf("Launched space worker %d\n", num)
 	for {
 		taskItem := <-spaceChan
@@ -21,7 +21,7 @@ func Space(num int, spaceChan <-chan task.TaskItem, appChan chan<- task.TaskItem
 			panic(err)
 		}
 		for _, space := range spaces {
-			variables := task.TaskVariables{
+			variables := task.Variables{
 				Org:   taskItem.Variables.Org,
 				Space: space,
 			}
@@ -35,7 +35,7 @@ func Space(num int, spaceChan <-chan task.TaskItem, appChan chan<- task.TaskItem
 			}
 			if isTrue {
 				fmt.Printf("[%s] Matched space '%s' in org '%s'\n", taskItem.Metadata.Name, space.Name, variables.Org.Name)
-				newTask := task.TaskItem{
+				newTask := task.Item{
 					Variables: variables,
 					Metadata:  taskItem.Metadata,
 				}

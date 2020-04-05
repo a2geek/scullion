@@ -9,13 +9,13 @@ import (
 	"syscall"
 )
 
-type RunCommand struct {
+type Run struct {
 	option.TaskOptions         `group:"Task Options"`
 	option.WorkerPools         `group:"Worker Pools" namespace:"worker" env-namespace:"WORKER"`
 	option.CloudFoundryOptions `group:"Cloud Foundry Configuration" namespace:"cf" env-namespace:"CF" reqired:"yes"`
 }
 
-func (cmd *RunCommand) Execute(args []string) error {
+func (cmd *Run) Execute(args []string) error {
 	tasks, err := cmd.ReadConfiguration()
 	if err != nil {
 		return err
@@ -26,10 +26,10 @@ func (cmd *RunCommand) Execute(args []string) error {
 		panic(err)
 	}
 
-	orgChan := make(chan task.TaskItem)
-	spaceChan := make(chan task.TaskItem)
-	appChan := make(chan task.TaskItem)
-	actionChan := make(chan task.TaskItem)
+	orgChan := make(chan task.Item)
+	spaceChan := make(chan task.Item)
+	appChan := make(chan task.Item)
+	actionChan := make(chan task.Item)
 
 	for i := 0; i < cmd.OrgPool; i++ {
 		go worker.Org(i, orgChan, spaceChan)

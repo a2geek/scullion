@@ -5,6 +5,6 @@ import (
 	"scullion/task"
 )
 
-func Log(taskItem task.TaskItem) {
+func Log(taskItem task.Item) {
 	fmt.Println(taskItem.Variables)
 }

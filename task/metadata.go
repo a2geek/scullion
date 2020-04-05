@@ -8,29 +8,29 @@ import (
 	"github.com/cloudfoundry-community/go-cfclient"
 )
 
-type TaskMetadata struct {
+type Metadata struct {
 	Name      string
 	Client    *cfclient.Client
 	OrgExpr   *vm.Program
 	SpaceExpr *vm.Program
 	AppExpr   *vm.Program
-	Action    func(TaskItem)
+	Action    func(Item)
 }
 
-func NewMetadata(taskDef config.TaskDef, client *cfclient.Client, action func(TaskItem)) (TaskMetadata, error) {
+func NewMetadata(taskDef config.TaskDef, client *cfclient.Client, action func(Item)) (Metadata, error) {
 	orgExpr, err := expr.Compile(taskDef.Filters.Organization)
 	if err != nil {
-		return TaskMetadata{}, err
+		return Metadata{}, err
 	}
 	spaceExpr, err := expr.Compile(taskDef.Filters.Space)
 	if err != nil {
-		return TaskMetadata{}, err
+		return Metadata{}, err
 	}
 	appExpr, err := expr.Compile(taskDef.Filters.Application)
 	if err != nil {
-		return TaskMetadata{}, err
+		return Metadata{}, err
 	}
-	metadata := TaskMetadata{
+	metadata := Metadata{
 		Name:      taskDef.Name,
 		Client:    client,
 		OrgExpr:   orgExpr,

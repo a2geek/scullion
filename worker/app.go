@@ -9,7 +9,7 @@ import (
 	"github.com/antonmedv/expr"
 )
 
-func App(num int, appChan <-chan task.TaskItem, actionChan chan<- task.TaskItem) {
+func App(num int, appChan <-chan task.Item, actionChan chan<- task.Item) {
 	fmt.Printf("Launched app worker %d\n", num)
 	for {
 		taskItem := <-appChan
@@ -21,7 +21,7 @@ func App(num int, appChan <-chan task.TaskItem, actionChan chan<- task.TaskItem)
 			panic(err)
 		}
 		for _, app := range apps {
-			variables := task.TaskVariables{
+			variables := task.Variables{
 				Org:   taskItem.Variables.Org,
 				Space: taskItem.Variables.Space,
 				App:   app,
@@ -37,7 +37,7 @@ func App(num int, appChan <-chan task.TaskItem, actionChan chan<- task.TaskItem)
 			if isTrue {
 				fmt.Printf("[%s] Matched app '%s' in space '%s' of org '%s'\n", taskItem.Metadata.Name, app.Name,
 					variables.Space.Name, variables.Org.Name)
-				newTask := task.TaskItem{
+				newTask := task.Item{
 					Variables: variables,
 					Metadata:  taskItem.Metadata,
 				}

@@ -10,7 +10,7 @@ import (
 	"github.com/cloudfoundry-community/go-cfclient"
 )
 
-func Task(num int, taskDef config.TaskDef, client *cfclient.Client, orgChan chan<- task.TaskItem) {
+func Task(num int, taskDef config.TaskDef, client *cfclient.Client, orgChan chan<- task.Item) {
 	fmt.Printf("Launched task worker %d\n", num)
 	metadata, err := task.NewMetadata(taskDef, client, action.Log)
 	if err != nil {
@@ -22,7 +22,7 @@ func Task(num int, taskDef config.TaskDef, client *cfclient.Client, orgChan chan
 	}
 	for t := range time.Tick(dur) {
 		fmt.Printf("[%s] Tick at %s\n", taskDef.Name, t)
-		taskItem := task.TaskItem{
+		taskItem := task.Item{
 			Metadata: metadata,
 		}
 		orgChan <- taskItem
