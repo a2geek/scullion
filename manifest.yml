@@ -1,0 +1,45 @@
+---
+applications:
+- name: scullion
+  no-route: true
+  # routes:
+  # - route: scullion.test.gdc.lan
+  buildpacks:
+  - go_buildpack
+  memory: 32m
+  instances: 1
+  command: scullion run
+  health-check-type: process
+  env:
+    GOVERSION: go1.13
+    SCULLION_TASKS: >
+      [
+        {
+            "name": "stop non-prod apps",
+            "schedule": {
+                "frequency": "1h"
+            },
+            "filters": {
+                "organization": "Org.Name != 'system'",
+                "space": "Space.Name != 'prod'",
+                "application": "App.State == 'STARTED'",
+                "action": "stop"
+            }
+        },
+        {
+            "name": "delete stoped non-prod apps",
+            "schedule": {
+                "frequency": "1h"
+            },
+            "filters": {
+                "organization": "Org.Name != 'system'",
+                "space": "Space.Name != 'prod'",
+                "application": "App.State == 'STOPPED' && time.Since(App.UpdatedAt) < time.ParseDuration('3H')",
+                "action": "delete"
+            }
+        }
+      ] 
+    CF_API: ((cf_api))
+    CF_USERNAME: ((cf_username))
+    CF_PASSWORD: ((cf_password))
+    CF_SKIP_SSL_VALIDATION: ((cf_skip_ssl_validation))

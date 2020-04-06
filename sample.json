@@ -1,14 +1,26 @@
 [
     {
-        "name": "a sample",
+        "name": "stop non-prod apps",
         "schedule": {
-            "frequency": "1m"
+            "frequency": "1h"
         },
         "filters": {
             "organization": "Org.Name != 'system'",
-            "space": "space.name == 'test'",
-            "application": "app.state == 'STARTED'",
+            "space": "Space.Name != 'prod'",
+            "application": "App.State == 'STARTED'",
             "action": "stop"
+        }
+    },
+    {
+        "name": "delete stoped non-prod apps",
+        "schedule": {
+            "frequency": "1h"
+        },
+        "filters": {
+            "organization": "Org.Name != 'system'",
+            "space": "Space.Name != 'prod'",
+            "application": "App.State == 'STOPPED' && time.Since(App.UpdatedAt) < time.ParseDuration('3H')",
+            "action": "delete"
         }
     }
 ] 
