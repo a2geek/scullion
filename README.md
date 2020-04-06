@@ -31,6 +31,17 @@ The following actions are allowed:
 
 Note that `stop` and `delete` are modified by the dry-run flag.
 
+## Filters
+
+Filters can be applied at any of these levels:
+* Organization
+* Space
+* Application
+
+Each step in the filter hierarchy contains the results from the prior stels. Thus, the organization filter only has the organization. Space filters include both space detail as well as organization (if it was processed), etc.
+
+TODO: If a rule only applies to spaces, the workers will begin processing against a space and skip organizations entirely. Same optimization applies to applications.
+
 ## Rules (tasks)
 
 Scullion configuration consists of a number of tasks.  The general layout is done in JSON like this:
