@@ -7,7 +7,7 @@
         "filters": {
             "organization": "Org.Name != 'system'",
             "space": "Space.Name != 'prod'",
-            "application": "App.State == 'STARTED' && time.Since(App.UpdatedAt) < time.ParseDuration('1H')",
+            "application": "App.State == 'STARTED' && TimeSince(App.UpdatedAt) < TimeParseDuration('1H')",
             "action": "stop"
         }
     },
@@ -19,7 +19,7 @@
         "filters": {
             "organization": "Org.Name != 'system'",
             "space": "Space.Name != 'prod'",
-            "application": "App.State == 'STOPPED' && time.Since(App.UpdatedAt) < time.ParseDuration('3H')",
+            "application": "App.State == 'STOPPED' && TimeSince(App.UpdatedAt) < TimeParseDuration('3H')",
             "action": "delete"
         }
     }
