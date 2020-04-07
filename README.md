@@ -4,6 +4,14 @@
 
 Cleans up after your Cloud Foundry development activities, so you don't have to.
 
+# TODO
+
+Beyond what is noted elsewhere, additional items:
+* Decide if the Golang model should be kept or switch to the JSON structrues as Cloud Foundry returns
+* What funcations are requried? date and time comparisons
+* Need to resolve logging mechanism
+* `panic` needs to be removed for robustness
+
 # Usage
 
 Scullion has multiple subcommands:
