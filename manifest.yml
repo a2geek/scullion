@@ -27,7 +27,7 @@ applications:
             }
         },
         {
-            "name": "delete stoped non-prod apps",
+            "name": "delete stopped non-prod apps",
             "schedule": {
                 "frequency": "1h"
             },
