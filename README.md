@@ -1,5 +1,7 @@
 # Scullion
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/a2geek/scullion)](https://goreportcard.com/report/github.com/a2geek/scullion)
+
 > Currently in development; things may move around. PR's more than welcome!
 
 Cleans up after your Cloud Foundry development activities, so you don't have to.
