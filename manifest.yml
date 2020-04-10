@@ -17,12 +17,12 @@ applications:
           {
               "name": "stop non-prod apps",
               "schedule": {
-                  "frequency": "1h"
+                  "frequency": "30m"
               },
               "filters": {
                   "organization": "Org.name != 'system'",
                   "space": "Space.name != 'prod'",
-                  "application": "App.state == 'STARTED' && (Now() - Date(App.updated_at)) < Duration('1H')",
+                  "application": "App.state == 'STARTED' && (Now() - Date(App.updated_at)) < Duration('1h')",
                   "action": "stop"
               }
           },
@@ -34,7 +34,7 @@ applications:
               "filters": {
                   "organization": "Org.name != 'system'",
                   "space": "Space.name != 'prod'",
-                  "application": "App.state == 'STOPPED' && (Now() - Date(App.updated_at)) < Duration('3H')",
+                  "application": "App.state == 'STOPPED' && (Now() - Date(App.updated_at)) < Duration('3h')",
                   "action": "delete"
               }
           }
