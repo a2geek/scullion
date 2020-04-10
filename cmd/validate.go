@@ -9,11 +9,8 @@ import (
 	"scullion/option"
 	"scullion/payload"
 	"scullion/task"
-	"scullion/util"
 	"time"
 
-	"github.com/antonmedv/expr"
-	"github.com/antonmedv/expr/vm"
 	"github.com/cloudfoundry-community/go-cfclient"
 )
 
@@ -38,27 +35,27 @@ func (cmd *Validate) Execute(args []string) error {
 }
 
 func (cmd *Validate) validate(taskDefs []config.TaskDef) bool {
-	fails := 0
+	totalFails := 0
 
 	var org cfclient.Org
 	err := json.Unmarshal([]byte(payload.OrgJSON), &org)
 	if err != nil {
 		fmt.Printf("Unable to parse org payload for validation: %s\n", err)
-		fails++
+		totalFails++
 	}
 
 	var space cfclient.Space
 	err = json.Unmarshal([]byte(payload.SpaceJSON), &space)
 	if err != nil {
 		fmt.Printf("Unable to parse space payload for validation: %s\n", err)
-		fails++
+		totalFails++
 	}
 
 	var app cfclient.App
 	err = json.Unmarshal([]byte(payload.ApplicationJSON), &app)
 	if err != nil {
 		fmt.Printf("Unable to parse app payload for validation: %s\n", err)
-		fails++
+		totalFails++
 	}
 
 	orgVar := task.Variables{
@@ -75,33 +72,34 @@ func (cmd *Validate) validate(taskDefs []config.TaskDef) bool {
 	}
 
 	for _, taskDef := range taskDefs {
+		fails := 0
 		m, err := task.NewMetadata(taskDef, nil, action.Log)
 		if err != nil {
 			fmt.Printf("Unable to compile expressions for task '%s': %s\n", taskDef.Name, err)
 			fails++
-			continue
+		} else {
+			fails += validateExpression(taskDef.Name, "org", m.IsOrgMatch, orgVar)
+			fails += validateExpression(taskDef.Name, "space", m.IsSpaceMatch, spaceVar)
+			fails += validateExpression(taskDef.Name, "app", m.IsAppMatch, appVar)
 		}
-
-		fails += cmd.validateExpression(taskDef.Name, "org", m.OrgExpr, orgVar)
-		fails += cmd.validateExpression(taskDef.Name, "space", m.SpaceExpr, spaceVar)
-		fails += cmd.validateExpression(taskDef.Name, "app", m.AppExpr, appVar)
 
 		if _, err := time.ParseDuration(taskDef.Schedule.Frequency); err != nil {
 			fmt.Printf("Unable to evaluate task '%s' frequency: %s\n", taskDef.Name, err)
 			fails++
-			continue
+		}
+
+		totalFails += fails
+		if fails == 0 {
+			fmt.Printf("Task '%s' looks ok.\n", taskDef.Name)
+		} else {
+			fmt.Printf("Task '%s' had errors.\n", taskDef.Name)
 		}
 	}
-	return fails == 0
+	return totalFails == 0
 }
 
-func (cmd *Validate) validateExpression(taskName, testName string, pgm *vm.Program, vars task.Variables) int {
-	result, err := expr.Run(pgm, vars)
-	if err != nil {
-		fmt.Printf("Unable to evaluate task '%s' %s expression: %s\n", taskName, testName, err)
-		return 1
-	}
-	_, err = util.IsTrue(result)
+func validateExpression(taskName, testName string, pgm func(task.Variables) (bool, error), vars task.Variables) int {
+	_, err := pgm(vars)
 	if err != nil {
 		fmt.Printf("Unable to evaluate task '%s' %s expression: %s\n", taskName, testName, err)
 		return 1

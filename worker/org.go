@@ -3,9 +3,6 @@ package worker
 import (
 	"fmt"
 	"scullion/task"
-	"scullion/util"
-
-	"github.com/antonmedv/expr"
 )
 
 func Org(num int, orgChan <-chan task.Item, spaceChan chan<- task.Item) {
@@ -20,11 +17,7 @@ func Org(num int, orgChan <-chan task.Item, spaceChan chan<- task.Item) {
 			variables := task.Variables{
 				Org: org,
 			}
-			result, err := expr.Run(taskItem.Metadata.OrgExpr, variables)
-			if err != nil {
-				panic(err)
-			}
-			isTrue, err := util.IsTrue(result)
+			isTrue, err := taskItem.Metadata.IsOrgMatch(variables)
 			if err != nil {
 				panic(err)
 			}

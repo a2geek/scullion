@@ -7,6 +7,7 @@ Cleans up after your Cloud Foundry development activities, so you don't have to.
 # Usage
 
 Scullion has multiple subcommands:
+
 * `run` is intended to run the rules continuously against a foundation. This is the most used use case.
 * `validate` allows validation of the task configuration; both the expression syntax as well as the object model (by way of sample data pulled from a running foundation).
 * TODO: `one-time` executes the rules once.
@@ -17,6 +18,7 @@ Both `run` and `one-time` have a dry-run mode to allow observation prior to taki
 # Configuration
 
 For each rule, it consists of:
+
 * A name to identify what is triggering an action.
 * A schedule (for run mode).
 * Filters to select organizations, spaces, and applications.
@@ -25,6 +27,7 @@ For each rule, it consists of:
 ## Actions
 
 The following actions are allowed:
+
 * `log`
 * TODO: `stop`
 * TODO: `delete`
@@ -34,6 +37,7 @@ Note that `stop` and `delete` are modified by the dry-run flag.
 ## Filters
 
 Filters can be applied at any of these levels:
+
 * Organization
 * Space
 * Application
@@ -45,6 +49,7 @@ TODO: If a rule only applies to spaces, the workers will begin processing agains
 ## Rules (tasks)
 
 Scullion configuration consists of a number of tasks.  The general layout is done in JSON like this:
+
 ```
 [
     {
@@ -53,9 +58,9 @@ Scullion configuration consists of a number of tasks.  The general layout is don
             "frequency": "1h"
         },
         "filters": {
-            "organization": "name ne 'system'",
-            "space": "name eq 'test'",
-            "application": "state eq 'STARTED' and age gt 3h",
+            "organization": "Org.name != 'system'",
+            "space": "Space.name == 'test'",
+            "application": "App.state == 'STARTED' && (Now() - Date(App.updated_at)) < Duration('1H')",
             "action": "stop"
         }
     },
@@ -65,7 +70,10 @@ Scullion configuration consists of a number of tasks.  The general layout is don
 ]
 ```
 
+(see `sample.json` for working sample)
+
 Configuration can be specified via an environment variable or a file. Most likely, with Cloud Foundry, this will be an via the manifest like this:
+
 ```
   env:
     SCULLION_CONFIG: >
@@ -74,6 +82,8 @@ Configuration can be specified via an environment variable or a file. Most likel
       }
 ```
 
+(see `manifest.yml` for working sample)
+
 # CLI snapshots
 
 (From development version)
@@ -81,7 +91,7 @@ Configuration can be specified via an environment variable or a file. Most likel
 ```
 $ go run main.go --help
 Usage:
-  main [OPTIONS] <run | validate>
+  main [OPTIONS] <disassemble | run | validate>
 
 Application Options:
   -v, --verbose  Enable verbose output
@@ -90,11 +100,31 @@ Help Options:
   -h, --help     Show this help message
 
 Available commands:
+  disassemble
   run
   validate
 ```
 
-```$ go run main.go validate --help
+```
+$ go run main.go disasm --help
+Usage:
+  main [OPTIONS] disassemble [disassemble-OPTIONS]
+
+Application Options:
+  -v, --verbose   Enable verbose output
+
+Help Options:
+  -h, --help      Show this help message
+
+[disassemble command options]
+
+    Task Options:
+      -e, --env=  Load configuration from environment variable (default: SCULLION_TASKS)
+      -f, --file= Read configuration from given file
+```
+
+```
+$ go run main.go validate --help
 Usage:
   main [OPTIONS] validate [validate-OPTIONS]
 
@@ -112,7 +142,7 @@ Help Options:
 ```
 
 ```
-$ go run main.go r --help
+$ go run main.go run --help
 Usage:
   main [OPTIONS] run [run-OPTIONS]
 

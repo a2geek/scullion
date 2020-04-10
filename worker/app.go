@@ -4,9 +4,6 @@ import (
 	"fmt"
 	"net/url"
 	"scullion/task"
-	"scullion/util"
-
-	"github.com/antonmedv/expr"
 )
 
 func App(num int, appChan <-chan task.Item, actionChan chan<- task.Item) {
@@ -26,11 +23,7 @@ func App(num int, appChan <-chan task.Item, actionChan chan<- task.Item) {
 				Space: taskItem.Variables.Space,
 				App:   app,
 			}
-			result, err := expr.Run(taskItem.Metadata.AppExpr, variables)
-			if err != nil {
-				panic(err)
-			}
-			isTrue, err := util.IsTrue(result)
+			isTrue, err := taskItem.Metadata.IsAppMatch(variables)
 			if err != nil {
 				panic(err)
 			}

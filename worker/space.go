@@ -4,9 +4,6 @@ import (
 	"fmt"
 	"net/url"
 	"scullion/task"
-	"scullion/util"
-
-	"github.com/antonmedv/expr"
 )
 
 func Space(num int, spaceChan <-chan task.Item, appChan chan<- task.Item) {
@@ -25,11 +22,7 @@ func Space(num int, spaceChan <-chan task.Item, appChan chan<- task.Item) {
 				Org:   taskItem.Variables.Org,
 				Space: space,
 			}
-			result, err := expr.Run(taskItem.Metadata.SpaceExpr, variables)
-			if err != nil {
-				panic(err)
-			}
-			isTrue, err := util.IsTrue(result)
+			isTrue, err := taskItem.Metadata.IsSpaceMatch(variables)
 			if err != nil {
 				panic(err)
 			}

@@ -14,30 +14,30 @@ applications:
     GOVERSION: go1.13
     SCULLION_TASKS: >
       [
-        {
-            "name": "stop non-prod apps",
-            "schedule": {
-                "frequency": "1h"
-            },
-            "filters": {
-                "organization": "Org.Name != 'system'",
-                "space": "Space.Name != 'prod'",
-                "application": "App.State == 'STARTED' && time.Since(App.UpdatedAt) < time.ParseDuration('1H')",
-                "action": "stop"
-            }
-        },
-        {
-            "name": "delete stoped non-prod apps",
-            "schedule": {
-                "frequency": "1h"
-            },
-            "filters": {
-                "organization": "Org.Name != 'system'",
-                "space": "Space.Name != 'prod'",
-                "application": "App.State == 'STOPPED' && time.Since(App.UpdatedAt) < time.ParseDuration('3H')",
-                "action": "delete"
-            }
-        }
+          {
+              "name": "stop non-prod apps",
+              "schedule": {
+                  "frequency": "1h"
+              },
+              "filters": {
+                  "organization": "Org.name != 'system'",
+                  "space": "Space.name != 'prod'",
+                  "application": "App.state == 'STARTED' && (Now() - Date(App.updated_at)) < Duration('1H')",
+                  "action": "stop"
+              }
+          },
+          {
+              "name": "delete stoped non-prod apps",
+              "schedule": {
+                  "frequency": "1h"
+              },
+              "filters": {
+                  "organization": "Org.name != 'system'",
+                  "space": "Space.name != 'prod'",
+                  "application": "App.state == 'STOPPED' && (Now() - Date(App.updated_at)) < Duration('3H')",
+                  "action": "delete"
+              }
+          }
       ] 
     CF_API: ((cf_api))
     CF_USERNAME: ((cf_username))
