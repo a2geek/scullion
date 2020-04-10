@@ -113,16 +113,6 @@ func toEnv(vars Variables) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	// env := map[string]interface{}{
-	// 	"org":   orgMap,
-	// 	"space": spaceMap,
-	// 	"app":   appMap,
-	// 	// "time":     datetime{},
-	// 	// "Duration": datetime{}.Duration,
-	// 	// "Now":      datetime{}.Now,
-	// 	// "Date":     datetime{}.Date,
-	// 	// "Sub":      datetime{}.Sub,
-	// }
 	env := RunEnv{
 		Org:   orgMap,
 		Space: spaceMap,
@@ -147,7 +137,7 @@ func toMap(obj interface{}) (map[string]interface{}, error) {
 type datetime struct{}
 
 func (datetime) Date(s string) time.Time {
-	t, err := time.Parse("RFC3339", s)
+	t, err := time.Parse(time.RFC3339, s)
 	if err != nil {
 		panic(err)
 	}
