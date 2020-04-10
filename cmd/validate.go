@@ -37,21 +37,21 @@ func (cmd *Validate) Execute(args []string) error {
 func (cmd *Validate) validate(taskDefs []config.TaskDef) bool {
 	totalFails := 0
 
-	var org cfclient.Org
+	var org cfclient.OrgResource
 	err := json.Unmarshal([]byte(payload.OrgJSON), &org)
 	if err != nil {
 		fmt.Printf("Unable to parse org payload for validation: %s\n", err)
 		totalFails++
 	}
 
-	var space cfclient.Space
+	var space cfclient.SpaceResource
 	err = json.Unmarshal([]byte(payload.SpaceJSON), &space)
 	if err != nil {
 		fmt.Printf("Unable to parse space payload for validation: %s\n", err)
 		totalFails++
 	}
 
-	var app cfclient.App
+	var app cfclient.AppResource
 	err = json.Unmarshal([]byte(payload.ApplicationJSON), &app)
 	if err != nil {
 		fmt.Printf("Unable to parse app payload for validation: %s\n", err)
@@ -59,16 +59,16 @@ func (cmd *Validate) validate(taskDefs []config.TaskDef) bool {
 	}
 
 	orgVar := task.Variables{
-		Org: org,
+		Org: org.Entity,
 	}
 	spaceVar := task.Variables{
-		Org:   org,
-		Space: space,
+		Org:   org.Entity,
+		Space: space.Entity,
 	}
 	appVar := task.Variables{
-		Org:   org,
-		Space: space,
-		App:   app,
+		Org:   org.Entity,
+		Space: space.Entity,
+		App:   app.Entity,
 	}
 
 	for _, taskDef := range taskDefs {
