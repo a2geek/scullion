@@ -9,13 +9,14 @@ Cleans up after your Cloud Foundry development activities, so you don't have to.
 # TODO
 
 Beyond what is noted elsewhere, additional items:
-* Decide if the Golang model should be kept or switch to the JSON structrues as Cloud Foundry returns
+
+* Decide if the Golang model should be kept or switch to the JSON structures as Cloud Foundry returns
 * Need to resolve logging mechanism
 * `panic` needs to be removed for robustness
 
 # Usage
 
-Scullion has multiple subcommands:
+Scullion has multiple sub-commands:
 
 * `run` is intended to run the rules continuously against a foundation. This is the most used use case.
 * `validate` allows validation of the task configuration; both the expression syntax as well as the object model (by way of sample data pulled from a running foundation).
@@ -51,7 +52,7 @@ Filters can be applied at any of these levels:
 * Space
 * Application
 
-Each step in the filter hierarchy contains the results from the prior stels. Thus, the organization filter only has the organization. Space filters include both space detail as well as organization (if it was processed), etc.
+Each step in the filter hierarchy contains the results from the prior steps. Thus, the organization filter only has the organization. Space filters include both space detail as well as organization (if it was processed), etc.
 
 TODO: If a rule only applies to spaces, the workers will begin processing against a space and skip organizations entirely. Same optimization applies to applications.
 
