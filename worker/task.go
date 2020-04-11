@@ -10,9 +10,13 @@ import (
 	"github.com/cloudfoundry-community/go-cfclient"
 )
 
-func Task(num int, taskDef config.TaskDef, client *cfclient.Client, orgChan chan<- task.Item) {
+func Task(num int, taskDef config.TaskDef, client *cfclient.Client, orgChan chan<- task.Item, dryRun bool) {
 	fmt.Printf("Launched task worker %d\n", num)
-	metadata, err := task.NewMetadata(taskDef, client, action.Log)
+	actionFunc, err := action.NewActionFunc(taskDef.Filters.Action, dryRun)
+	if err != nil {
+		panic(err)
+	}
+	metadata, err := task.NewMetadata(taskDef, client, actionFunc)
 	if err != nil {
 		panic(err)
 	}

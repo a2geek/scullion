@@ -8,7 +8,7 @@
             "organization": "Org.name != 'system'",
             "space": "Space.name != 'prod'",
             "application": "App.state == 'STARTED' && (Now() - Date(App.updated_at)) > Duration('1h')",
-            "action": "stop"
+            "action": "stop-app"
         }
     },
     {
@@ -20,7 +20,7 @@
             "organization": "Org.name != 'system'",
             "space": "Space.name != 'prod'",
             "application": "App.state == 'STOPPED' && (Now() - Date(App.updated_at)) > Duration('3h')",
-            "action": "delete"
+            "action": "delete-app"
         }
     }
 ] 

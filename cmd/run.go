@@ -51,7 +51,7 @@ func (cmd *Run) Execute(args []string) error {
 	}
 
 	for i, task := range tasks {
-		go worker.Task(i, task, client, orgChan)
+		go worker.Task(i, task, client, orgChan, cmd.DryRun)
 	}
 
 	termChan := make(chan os.Signal)

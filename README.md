@@ -39,10 +39,10 @@ For each rule, it consists of:
 The following actions are allowed:
 
 * `log`
-* TODO: `stop`
-* TODO: `delete`
+* `stop-app`
+* `delete-app`
 
-Note that `stop` and `delete` are modified by the dry-run flag.
+Note that `stop-app` and `delete-app` are modified by the `--dry-run` flag.
 
 ## Filters
 
@@ -71,7 +71,7 @@ Scullion configuration consists of a number of tasks.  The general layout is don
             "organization": "Org.name != 'system'",
             "space": "Space.name == 'test'",
             "application": "App.state == 'STARTED' && (Now() - Date(App.updated_at)) > Duration('1H')",
-            "action": "stop"
+            "action": "stop-app"
         }
     },
     {
@@ -168,6 +168,7 @@ Help Options:
     Task Options:
       -e, --env=                    Load configuration from environment variable (default: SCULLION_TASKS)
       -f, --file=                   Read configuration from given file
+          --dry-run                 Perform a dry run and log actions that would be taken
 
     Worker Pools:
           --worker-org-pool=        Set the number of organization workers in the pool (default: 1) [$WORKER_ORG_POOL]
@@ -198,6 +199,7 @@ Help Options:
     Task Options:
       -e, --env=                    Load configuration from environment variable (default: SCULLION_TASKS)
       -f, --file=                   Read configuration from given file
+          --dry-run                 Perform a dry run and log actions that would be taken
 
     Worker Pools:
           --worker-org-pool=        Set the number of organization workers in the pool (default: 1) [$WORKER_ORG_POOL]

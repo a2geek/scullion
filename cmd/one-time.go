@@ -50,7 +50,11 @@ func (cmd *OneTime) Execute(args []string) error {
 
 	// Cannot use Task directly as it has the timer embedded
 	for _, taskDef := range tasks {
-		metadata, err := task.NewMetadata(taskDef, client, action.Log)
+		actionFunc, err := action.NewActionFunc(taskDef.Filters.Action, cmd.DryRun)
+		if err != nil {
+			panic(err)
+		}
+		metadata, err := task.NewMetadata(taskDef, client, actionFunc)
 		if err != nil {
 			panic(err)
 		}
