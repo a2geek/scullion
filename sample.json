@@ -7,7 +7,7 @@
         "filters": {
             "organization": "Org.name != 'system'",
             "space": "Space.name != 'prod'",
-            "application": "App.state == 'STARTED' && (Now() - Date(App.updated_at)) < Duration('1h')",
+            "application": "App.state == 'STARTED' && (Now() - Date(App.updated_at)) > Duration('1h')",
             "action": "stop"
         }
     },
@@ -19,7 +19,7 @@
         "filters": {
             "organization": "Org.name != 'system'",
             "space": "Space.name != 'prod'",
-            "application": "App.state == 'STOPPED' && (Now() - Date(App.updated_at)) < Duration('3h')",
+            "application": "App.state == 'STOPPED' && (Now() - Date(App.updated_at)) > Duration('3h')",
             "action": "delete"
         }
     }
