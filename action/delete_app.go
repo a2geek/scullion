@@ -13,7 +13,11 @@ func DeleteApp(taskItem task.Item) {
 		taskItem.Variables.Org.Name)
 
 	if err := taskItem.Metadata.Client.DeleteApp(taskItem.Variables.App.Guid); err != nil {
-		fmt.Printf("Unable to delete application: %s\n", err)
+		fmt.Printf("Unable to delete application '%s' in space '%s' of org '%s': %s\n",
+			taskItem.Variables.App.Name,
+			taskItem.Variables.Space.Name,
+			taskItem.Variables.Org.Name,
+			err)
 	}
 }
 
