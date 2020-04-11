@@ -20,7 +20,7 @@ Scullion has multiple subcommands:
 * `run` is intended to run the rules continuously against a foundation. This is the most used use case.
 * `validate` allows validation of the task configuration; both the expression syntax as well as the object model (by way of sample data pulled from a running foundation).
 * `one-time` executes the rules once.
-* TOOD: `reference` dump out the object model to assist in scripting.
+* TODO: `reference` dump out the object model to assist in scripting.
 
 Both `run` and `one-time` have a dry-run mode to allow observation prior to taking action.
 
