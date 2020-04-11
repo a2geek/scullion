@@ -12,6 +12,7 @@ applications:
   health-check-type: process
   env:
     GOVERSION: go1.13
+    SCULLION_DRY_RUN: true
     SCULLION_TASKS: >
       [
           {
