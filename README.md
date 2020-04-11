@@ -10,7 +10,6 @@ Cleans up after your Cloud Foundry development activities, so you don't have to.
 
 Beyond what is noted elsewhere, additional items:
 * Decide if the Golang model should be kept or switch to the JSON structrues as Cloud Foundry returns
-* What funcations are requried? date and time comparisons
 * Need to resolve logging mechanism
 * `panic` needs to be removed for robustness
 
@@ -20,7 +19,7 @@ Scullion has multiple subcommands:
 
 * `run` is intended to run the rules continuously against a foundation. This is the most used use case.
 * `validate` allows validation of the task configuration; both the expression syntax as well as the object model (by way of sample data pulled from a running foundation).
-* TODO: `one-time` executes the rules once.
+* `one-time` executes the rules once.
 * TOOD: `reference` dump out the object model to assist in scripting.
 
 Both `run` and `one-time` have a dry-run mode to allow observation prior to taking action.
@@ -70,7 +69,7 @@ Scullion configuration consists of a number of tasks.  The general layout is don
         "filters": {
             "organization": "Org.name != 'system'",
             "space": "Space.name == 'test'",
-            "application": "App.state == 'STARTED' && (Now() - Date(App.updated_at)) < Duration('1H')",
+            "application": "App.state == 'STARTED' && (Now() - Date(App.updated_at)) > Duration('1H')",
             "action": "stop"
         }
     },
@@ -101,7 +100,7 @@ Configuration can be specified via an environment variable or a file. Most likel
 ```
 $ go run main.go --help
 Usage:
-  main [OPTIONS] <disassemble | run | validate>
+  main [OPTIONS] <command>
 
 Application Options:
   -v, --verbose  Enable verbose output
@@ -111,6 +110,7 @@ Help Options:
 
 Available commands:
   disassemble
+  one-time
   run
   validate
 ```
@@ -149,6 +149,36 @@ Help Options:
     Task Options:
       -e, --env=  Load configuration from environment variable (default: SCULLION_TASKS)
       -f, --file= Read configuration from given file
+```
+
+```
+$ go run main.go one-time --help
+Usage:
+  main [OPTIONS] one-time [one-time-OPTIONS]
+
+Application Options:
+  -v, --verbose                     Enable verbose output
+
+Help Options:
+  -h, --help                        Show this help message
+
+[one-time command options]
+
+    Task Options:
+      -e, --env=                    Load configuration from environment variable (default: SCULLION_TASKS)
+      -f, --file=                   Read configuration from given file
+
+    Worker Pools:
+          --worker-org-pool=        Set the number of organization workers in the pool (default: 1) [$WORKER_ORG_POOL]
+          --worker-space-pool=      Set the number of space workers in the pool (default: 1) [$WORKER_SPACE_POOL]
+          --worker-app-pool=        Set the number of application workers in the pool (default: 1) [$WORKER_APP_POOL]
+          --worker-action-pool=     Set the number of action (stop/start) workers in the pool (default: 1) [$WORKER_ACTION_POOL]
+
+    Cloud Foundry Configuration:
+      -a, --cf-api=                 API URL [$CF_API]
+      -u, --cf-username=            Username [$CF_USERNAME]
+      -p, --cf-password=            Password [$CF_PASSWORD]
+      -k, --cf-skip-ssl-validation  Skip SSL validation of Cloud Foundry endpoint; not recommended [$CF_SKIP_SSL_VALIDATION]
 ```
 
 ```
