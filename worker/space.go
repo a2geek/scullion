@@ -15,9 +15,8 @@ func Space(num int, spaceChan <-chan task.Item, appChan chan<- task.Item, wg *sy
 	defer wg.Done()
 
 	for taskItem := range spaceChan {
-		q := url.Values{
-			"organization_guid": []string{taskItem.Variables.Org.Guid},
-		}
+		q := url.Values{}
+		q.Add("q", fmt.Sprintf("organization_guid:%s", taskItem.Variables.Org.Guid))
 		spaces, err := taskItem.Metadata.Client.ListSpacesByQuery(q)
 		if err != nil {
 			panic(err)

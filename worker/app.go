@@ -15,9 +15,8 @@ func App(num int, appChan <-chan task.Item, actionChan chan<- task.Item, wg *syn
 	defer wg.Done()
 
 	for taskItem := range appChan {
-		q := url.Values{
-			"space_guid": []string{taskItem.Variables.Space.Guid},
-		}
+		q := url.Values{}
+		q.Add("q", fmt.Sprintf("space_guid:%s", taskItem.Variables.Space.Guid))
 		apps, err := taskItem.Metadata.Client.ListAppsByQuery(q)
 		if err != nil {
 			panic(err)
