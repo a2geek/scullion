@@ -4,12 +4,17 @@ import (
 	"fmt"
 	"net/url"
 	"scullion/task"
+	"sync"
 )
 
-func Space(num int, spaceChan <-chan task.Item, appChan chan<- task.Item) {
+func Space(num int, spaceChan <-chan task.Item, appChan chan<- task.Item, wg *sync.WaitGroup) {
 	fmt.Printf("Launched space worker %d\n", num)
-	for {
-		taskItem := <-spaceChan
+
+	// if space channel closes, let's close the app channel as well!
+	defer close(appChan)
+	defer wg.Done()
+
+	for taskItem := range spaceChan {
 		q := url.Values{
 			"organization_guid": []string{taskItem.Variables.Org.Guid},
 		}

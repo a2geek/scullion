@@ -3,12 +3,17 @@ package worker
 import (
 	"fmt"
 	"scullion/task"
+	"sync"
 )
 
-func Org(num int, orgChan <-chan task.Item, spaceChan chan<- task.Item) {
+func Org(num int, orgChan <-chan task.Item, spaceChan chan<- task.Item, wg *sync.WaitGroup) {
 	fmt.Printf("Launched org worker %d\n", num)
-	for {
-		taskItem := <-orgChan
+
+	// if org channel closes, let's close the space channel as well!
+	defer close(spaceChan)
+	defer wg.Done()
+
+	for taskItem := range orgChan {
 		orgs, err := taskItem.Metadata.Client.ListOrgs()
 		if err != nil {
 			panic(err)

@@ -1,22 +1,20 @@
 package cmd
 
 import (
-	"os"
-	"os/signal"
+	"scullion/action"
 	"scullion/option"
 	"scullion/task"
 	"scullion/worker"
 	"sync"
-	"syscall"
 )
 
-type Run struct {
+type OneTime struct {
 	option.TaskOptions         `group:"Task Options"`
 	option.WorkerPools         `group:"Worker Pools" namespace:"worker" env-namespace:"WORKER"`
 	option.CloudFoundryOptions `group:"Cloud Foundry Configuration" namespace:"cf" env-namespace:"CF" reqired:"yes"`
 }
 
-func (cmd *Run) Execute(args []string) error {
+func (cmd *OneTime) Execute(args []string) error {
 	tasks, err := cmd.ReadConfiguration()
 	if err != nil {
 		return err
@@ -50,13 +48,17 @@ func (cmd *Run) Execute(args []string) error {
 		go worker.Action(i, actionChan, &wg)
 	}
 
-	for i, task := range tasks {
-		go worker.Task(i, task, client, orgChan)
+	// Cannot use Task directly as it has the timer embedded
+	for _, taskDef := range tasks {
+		metadata, err := task.NewMetadata(taskDef, client, action.Log)
+		if err != nil {
+			panic(err)
+		}
+		taskItem := task.Item{
+			Metadata: metadata,
+		}
+		orgChan <- taskItem
 	}
-
-	termChan := make(chan os.Signal)
-	signal.Notify(termChan, syscall.SIGINT, syscall.SIGTERM)
-	<-termChan
 
 	// Begin cascade of shutting down...
 	close(orgChan)
