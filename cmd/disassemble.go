@@ -18,7 +18,7 @@ func (cmd *Disassemble) Execute(args []string) error {
 	}
 
 	for _, taskDef := range taskDefs {
-		m, err := task.NewMetadata(taskDef, nil, action.Log)
+		m, err := task.NewMetadata(taskDef, nil, action.Log, "INFO")
 		if err != nil {
 			fmt.Printf("Unable to compile expressions for task '%s': %s\n", taskDef.Name, err)
 			continue

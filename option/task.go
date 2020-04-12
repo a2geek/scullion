@@ -12,7 +12,6 @@ import (
 type TaskOptions struct {
 	EnvVar   string `short:"e" long:"env" default:"SCULLION_TASKS" description:"Load configuration from environment variable"`
 	FileName string `short:"f" long:"file" description:"Read configuration from given file"`
-	DryRun   bool   `long:"dry-run" env:"SCULLION_DRY_RUN" description:"Perform a dry run and log actions that would be taken"`
 }
 
 func (o *TaskOptions) loadTaskDefs(data []byte) ([]config.TaskDef, error) {

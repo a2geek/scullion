@@ -11,8 +11,6 @@ Cleans up after your Cloud Foundry development activities, so you don't have to.
 Beyond what is noted elsewhere, additional items:
 
 * Decide if the Golang model should be kept or switch to the JSON structures as Cloud Foundry returns
-* Need to resolve logging mechanism
-* `panic` needs to be removed for robustness
 
 # Usage
 
@@ -103,11 +101,8 @@ $ go run main.go --help
 Usage:
   main [OPTIONS] <command>
 
-Application Options:
-  -v, --verbose  Enable verbose output
-
 Help Options:
-  -h, --help     Show this help message
+  -h, --help  Show this help message
 
 Available commands:
   disassemble
@@ -120,9 +115,6 @@ Available commands:
 $ go run main.go disasm --help
 Usage:
   main [OPTIONS] disassemble [disassemble-OPTIONS]
-
-Application Options:
-  -v, --verbose   Enable verbose output
 
 Help Options:
   -h, --help      Show this help message
@@ -139,9 +131,6 @@ $ go run main.go validate --help
 Usage:
   main [OPTIONS] validate [validate-OPTIONS]
 
-Application Options:
-  -v, --verbose   Enable verbose output
-
 Help Options:
   -h, --help      Show this help message
 
@@ -157,30 +146,30 @@ $ go run main.go one-time --help
 Usage:
   main [OPTIONS] one-time [one-time-OPTIONS]
 
-Application Options:
-  -v, --verbose                     Enable verbose output
-
 Help Options:
-  -h, --help                        Show this help message
+  -h, --help                                     Show this help message
 
 [one-time command options]
 
+    Run Options:
+          --dry-run                              Perform a dry run and log actions that would be taken [$SCULLION_DRY_RUN]
+      -l, --log-level=[ERROR|WARNING|INFO|DEBUG] Set the logging level (default: INFO) [$SCULLION_LOG_LEVEL]
+
     Task Options:
-      -e, --env=                    Load configuration from environment variable (default: SCULLION_TASKS)
-      -f, --file=                   Read configuration from given file
-          --dry-run                 Perform a dry run and log actions that would be taken
+      -e, --env=                                 Load configuration from environment variable (default: SCULLION_TASKS)
+      -f, --file=                                Read configuration from given file
 
     Worker Pools:
-          --worker-org-pool=        Set the number of organization workers in the pool (default: 1) [$WORKER_ORG_POOL]
-          --worker-space-pool=      Set the number of space workers in the pool (default: 1) [$WORKER_SPACE_POOL]
-          --worker-app-pool=        Set the number of application workers in the pool (default: 1) [$WORKER_APP_POOL]
-          --worker-action-pool=     Set the number of action (stop/start) workers in the pool (default: 1) [$WORKER_ACTION_POOL]
+          --worker-org-pool=                     Set the number of organization workers in the pool (default: 1) [$WORKER_ORG_POOL]
+          --worker-space-pool=                   Set the number of space workers in the pool (default: 1) [$WORKER_SPACE_POOL]
+          --worker-app-pool=                     Set the number of application workers in the pool (default: 1) [$WORKER_APP_POOL]
+          --worker-action-pool=                  Set the number of action (stop/start) workers in the pool (default: 1) [$WORKER_ACTION_POOL]
 
     Cloud Foundry Configuration:
-      -a, --cf-api=                 API URL [$CF_API]
-      -u, --cf-username=            Username [$CF_USERNAME]
-      -p, --cf-password=            Password [$CF_PASSWORD]
-      -k, --cf-skip-ssl-validation  Skip SSL validation of Cloud Foundry endpoint; not recommended [$CF_SKIP_SSL_VALIDATION]
+      -a, --cf-api=                              API URL [$CF_API]
+      -u, --cf-username=                         Username [$CF_USERNAME]
+      -p, --cf-password=                         Password [$CF_PASSWORD]
+      -k, --cf-skip-ssl-validation               Skip SSL validation of Cloud Foundry endpoint; not recommended [$CF_SKIP_SSL_VALIDATION]
 ```
 
 ```
@@ -188,28 +177,29 @@ $ go run main.go run --help
 Usage:
   main [OPTIONS] run [run-OPTIONS]
 
-Application Options:
-  -v, --verbose                     Enable verbose output
-
 Help Options:
-  -h, --help                        Show this help message
+  -h, --help                                     Show this help message
 
 [run command options]
 
+    Run Options:
+          --dry-run                              Perform a dry run and log actions that would be taken [$SCULLION_DRY_RUN]
+      -l, --log-level=[ERROR|WARNING|INFO|DEBUG] Set the logging level (default: INFO) [$SCULLION_LOG_LEVEL]
+
     Task Options:
-      -e, --env=                    Load configuration from environment variable (default: SCULLION_TASKS)
-      -f, --file=                   Read configuration from given file
-          --dry-run                 Perform a dry run and log actions that would be taken
+      -e, --env=                                 Load configuration from environment variable (default: SCULLION_TASKS)
+      -f, --file=                                Read configuration from given file
 
     Worker Pools:
-          --worker-org-pool=        Set the number of organization workers in the pool (default: 1) [$WORKER_ORG_POOL]
-          --worker-space-pool=      Set the number of space workers in the pool (default: 1) [$WORKER_SPACE_POOL]
-          --worker-app-pool=        Set the number of application workers in the pool (default: 1) [$WORKER_APP_POOL]
-          --worker-action-pool=     Set the number of action (stop/start) workers in the pool (default: 1) [$WORKER_ACTION_POOL]
+          --worker-org-pool=                     Set the number of organization workers in the pool (default: 1) [$WORKER_ORG_POOL]
+          --worker-space-pool=                   Set the number of space workers in the pool (default: 1) [$WORKER_SPACE_POOL]
+          --worker-app-pool=                     Set the number of application workers in the pool (default: 1) [$WORKER_APP_POOL]
+          --worker-action-pool=                  Set the number of action (stop/start) workers in the pool (default: 1) [$WORKER_ACTION_POOL]
 
     Cloud Foundry Configuration:
-      -a, --cf-api=                 API URL [$CF_API]
-      -u, --cf-username=            Username [$CF_USERNAME]
-      -p, --cf-password=            Password [$CF_PASSWORD]
-      -k, --cf-skip-ssl-validation  Skip SSL validation of Cloud Foundry endpoint; not recommended [$CF_SKIP_SSL_VALIDATION]
+      -a, --cf-api=                              API URL [$CF_API]
+      -u, --cf-username=                         Username [$CF_USERNAME]
+      -p, --cf-password=                         Password [$CF_PASSWORD]
+      -k, --cf-skip-ssl-validation               Skip SSL validation of Cloud Foundry endpoint; not recommended [$CF_SKIP_SSL_VALIDATION]
+
 ```

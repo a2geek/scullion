@@ -1,19 +1,17 @@
 package action
 
 import (
-	"fmt"
 	"scullion/task"
 )
 
 func StopApp(taskItem task.Item) {
-	fmt.Printf("[%s] Stopping app '%s' in space '%s' of org '%s'\n",
-		taskItem.Metadata.Name,
+	taskItem.Metadata.Logger.Infof("Stopping app '%s' in space '%s' of org '%s'",
 		taskItem.Variables.App.Name,
 		taskItem.Variables.Space.Name,
 		taskItem.Variables.Org.Name)
 
 	if err := taskItem.Metadata.Client.StopApp(taskItem.Variables.App.Guid); err != nil {
-		fmt.Printf("Unable to stop application '%s' in space '%s' of org '%s': %s\n",
+		taskItem.Metadata.Logger.Errorf("Unable to stop application '%s' in space '%s' of org '%s': %s",
 			taskItem.Variables.App.Name,
 			taskItem.Variables.Space.Name,
 			taskItem.Variables.Org.Name,
@@ -22,8 +20,7 @@ func StopApp(taskItem task.Item) {
 }
 
 func DryRunStopApp(taskItem task.Item) {
-	fmt.Printf("[%s] (DRY-RUN) Stopping app '%s' in space '%s' of org '%s'\n",
-		taskItem.Metadata.Name,
+	taskItem.Metadata.Logger.Infof("(DRY-RUN) Stopping app '%s' in space '%s' of org '%s'",
 		taskItem.Variables.App.Name,
 		taskItem.Variables.Space.Name,
 		taskItem.Variables.Org.Name)

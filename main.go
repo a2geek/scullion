@@ -7,8 +7,6 @@ import (
 )
 
 type Options struct {
-	Verbose []bool `short:"v" long:"verbose" description:"Enable verbose output"`
-
 	Run         cmd.Run         `command:"run" alias:"r"`
 	Validate    cmd.Validate    `command:"validate" alias:"v"`
 	Disassemble cmd.Disassemble `command:"disassemble" alias:"disasm" alias:"d" alias:"dump"`

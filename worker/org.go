@@ -2,12 +2,17 @@ package worker
 
 import (
 	"fmt"
+	"scullion/log"
 	"scullion/task"
 	"sync"
 )
 
-func Org(num int, orgChan <-chan task.Item, spaceChan chan<- task.Item, wg *sync.WaitGroup) {
-	fmt.Printf("Launched org worker %d\n", num)
+func Org(num int, orgChan <-chan task.Item, spaceChan chan<- task.Item, wg *sync.WaitGroup, logLevel string) {
+	logger, err := log.NewLogger(fmt.Sprintf("org worker %d", num), logLevel)
+	if err != nil {
+		panic(err)
+	}
+	logger.Info("Launched")
 
 	// if org channel closes, let's close the space channel as well!
 	defer close(spaceChan)
@@ -16,7 +21,8 @@ func Org(num int, orgChan <-chan task.Item, spaceChan chan<- task.Item, wg *sync
 	for taskItem := range orgChan {
 		orgs, err := taskItem.Metadata.Client.ListOrgs()
 		if err != nil {
-			panic(err)
+			taskItem.Metadata.Logger.Errorf("error querying for orgs: %v", err)
+			continue
 		}
 		for _, org := range orgs {
 			variables := task.Variables{
@@ -24,18 +30,21 @@ func Org(num int, orgChan <-chan task.Item, spaceChan chan<- task.Item, wg *sync
 			}
 			isTrue, err := taskItem.Metadata.IsOrgMatch(variables)
 			if err != nil {
-				panic(err)
+				taskItem.Metadata.Logger.Errorf("unable to determine true/false: %v", err)
+				continue
 			}
 			if isTrue {
-				fmt.Printf("[%s] Matched org '%s'\n", taskItem.Metadata.Name, org.Name)
+				taskItem.Metadata.Logger.Infof("Matched org '%s'", org.Name)
 				newTask := task.Item{
 					Variables: variables,
 					Metadata:  taskItem.Metadata,
 				}
 				spaceChan <- newTask
 			} else {
-				fmt.Printf("[%s] Skipping org '%s'\n", taskItem.Metadata.Name, org.Name)
+				taskItem.Metadata.Logger.Infof("Skipping org '%s'", org.Name)
 			}
 		}
 	}
+
+	logger.Error("exiting")
 }

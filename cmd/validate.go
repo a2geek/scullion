@@ -73,7 +73,7 @@ func (cmd *Validate) validate(taskDefs []config.TaskDef) bool {
 
 	for _, taskDef := range taskDefs {
 		fails := 0
-		m, err := task.NewMetadata(taskDef, nil, action.Log)
+		m, err := task.NewMetadata(taskDef, nil, action.Log, "INFO")
 		if err != nil {
 			fmt.Printf("Unable to compile expressions for task '%s': %s\n", taskDef.Name, err)
 			fails++

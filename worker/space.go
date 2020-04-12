@@ -3,12 +3,17 @@ package worker
 import (
 	"fmt"
 	"net/url"
+	"scullion/log"
 	"scullion/task"
 	"sync"
 )
 
-func Space(num int, spaceChan <-chan task.Item, appChan chan<- task.Item, wg *sync.WaitGroup) {
-	fmt.Printf("Launched space worker %d\n", num)
+func Space(num int, spaceChan <-chan task.Item, appChan chan<- task.Item, wg *sync.WaitGroup, logLevel string) {
+	logger, err := log.NewLogger(fmt.Sprintf("space worker %d", num), logLevel)
+	if err != nil {
+		panic(err)
+	}
+	logger.Info("Launched")
 
 	// if space channel closes, let's close the app channel as well!
 	defer close(appChan)
@@ -17,9 +22,12 @@ func Space(num int, spaceChan <-chan task.Item, appChan chan<- task.Item, wg *sy
 	for taskItem := range spaceChan {
 		q := url.Values{}
 		q.Add("q", fmt.Sprintf("organization_guid:%s", taskItem.Variables.Org.Guid))
+		taskItem.Metadata.Logger.Debugf("space query = %s", q)
 		spaces, err := taskItem.Metadata.Client.ListSpacesByQuery(q)
 		if err != nil {
-			panic(err)
+			taskItem.Metadata.Logger.Errorf("error querying for org spaces '%s' (%s): %v",
+				taskItem.Variables.Org.Name, taskItem.Variables.Org.Guid, err)
+			continue
 		}
 		for _, space := range spaces {
 			variables := task.Variables{
@@ -28,18 +36,21 @@ func Space(num int, spaceChan <-chan task.Item, appChan chan<- task.Item, wg *sy
 			}
 			isTrue, err := taskItem.Metadata.IsSpaceMatch(variables)
 			if err != nil {
-				panic(err)
+				taskItem.Metadata.Logger.Errorf("unable to determine true/false: %v", err)
+				continue
 			}
 			if isTrue {
-				fmt.Printf("[%s] Matched space '%s' in org '%s'\n", taskItem.Metadata.Name, space.Name, variables.Org.Name)
+				taskItem.Metadata.Logger.Infof("Matched space '%s' in org '%s'", space.Name, variables.Org.Name)
 				newTask := task.Item{
 					Variables: variables,
 					Metadata:  taskItem.Metadata,
 				}
 				appChan <- newTask
 			} else {
-				fmt.Printf("[%s] Skipping space '%s' in org '%s'\n", taskItem.Metadata.Name, space.Name, variables.Org.Name)
+				taskItem.Metadata.Logger.Infof("Skipping space '%s' in org '%s'", space.Name, variables.Org.Name)
 			}
 		}
 	}
+
+	logger.Error("exiting")
 }

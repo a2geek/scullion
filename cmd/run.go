@@ -11,6 +11,7 @@ import (
 )
 
 type Run struct {
+	option.RunOptions          `group:"Run Options"`
 	option.TaskOptions         `group:"Task Options"`
 	option.WorkerPools         `group:"Worker Pools" namespace:"worker" env-namespace:"WORKER"`
 	option.CloudFoundryOptions `group:"Cloud Foundry Configuration" namespace:"cf" env-namespace:"CF" reqired:"yes"`
@@ -35,23 +36,23 @@ func (cmd *Run) Execute(args []string) error {
 	var wg sync.WaitGroup
 	for i := 0; i < cmd.OrgPool; i++ {
 		wg.Add(1)
-		go worker.Org(i, orgChan, spaceChan, &wg)
+		go worker.Org(i, orgChan, spaceChan, &wg, cmd.Level)
 	}
 	for i := 0; i < cmd.SpacePool; i++ {
 		wg.Add(1)
-		go worker.Space(i, spaceChan, appChan, &wg)
+		go worker.Space(i, spaceChan, appChan, &wg, cmd.Level)
 	}
 	for i := 0; i < cmd.AppPool; i++ {
 		wg.Add(1)
-		go worker.App(i, appChan, actionChan, &wg)
+		go worker.App(i, appChan, actionChan, &wg, cmd.Level)
 	}
 	for i := 0; i < cmd.ActionPool; i++ {
 		wg.Add(1)
-		go worker.Action(i, actionChan, &wg)
+		go worker.Action(i, actionChan, &wg, cmd.Level)
 	}
 
 	for i, task := range tasks {
-		go worker.Task(i, task, client, orgChan, cmd.DryRun)
+		go worker.Task(i, task, client, orgChan, cmd.RunOptions)
 	}
 
 	termChan := make(chan os.Signal)

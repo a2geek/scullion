@@ -2,13 +2,15 @@ package task
 
 import (
 	"encoding/json"
+	"fmt"
 	"scullion/config"
-	"scullion/util"
+	"scullion/log"
 	"time"
 
 	"github.com/antonmedv/expr"
 	"github.com/antonmedv/expr/vm"
 	"github.com/cloudfoundry-community/go-cfclient"
+	"github.com/lxc/lxd/shared/logger"
 )
 
 type Metadata struct {
@@ -18,12 +20,36 @@ type Metadata struct {
 	SpaceExpr *vm.Program
 	AppExpr   *vm.Program
 	Action    func(Item)
+	Logger    log.Logger
 }
 
-func NewMetadata(taskDef config.TaskDef, client *cfclient.Client, action func(Item)) (Metadata, error) {
-	env, err := toEnv(Variables{})
+func NewMetadata(taskDef config.TaskDef, client *cfclient.Client, action func(Item), logLevel string) (Metadata, error) {
+	logger, err := log.NewLogger(taskDef.Name, logLevel)
 	if err != nil {
 		return Metadata{}, err
+	}
+
+	orgExpr, spaceExpr, appExpr, err := compile(taskDef.Filters, logger)
+	if err != nil {
+		return Metadata{}, err
+	}
+
+	metadata := Metadata{
+		Name:      taskDef.Name,
+		Client:    client,
+		OrgExpr:   orgExpr,
+		SpaceExpr: spaceExpr,
+		AppExpr:   appExpr,
+		Action:    action,
+		Logger:    logger,
+	}
+	return metadata, nil
+}
+
+func compile(filters config.Filter, logger log.Logger) (*vm.Program, *vm.Program, *vm.Program, error) {
+	env, err := toEnv(Variables{}, logger)
+	if err != nil {
+		return nil, nil, nil, err
 	}
 	options := []expr.Option{
 		expr.Env(env),
@@ -48,41 +74,33 @@ func NewMetadata(taskDef config.TaskDef, client *cfclient.Client, action func(It
 		expr.Operator(">=", "AfterOrEqualDuration"),
 	}
 
-	orgExpr, err := expr.Compile(taskDef.Filters.Organization, options...)
+	orgExpr, err := expr.Compile(filters.Organization, options...)
 	if err != nil {
-		return Metadata{}, err
+		return nil, nil, nil, err
 	}
-	spaceExpr, err := expr.Compile(taskDef.Filters.Space, options...)
+	spaceExpr, err := expr.Compile(filters.Space, options...)
 	if err != nil {
-		return Metadata{}, err
+		return nil, nil, nil, err
 	}
-	appExpr, err := expr.Compile(taskDef.Filters.Application, options...)
+	appExpr, err := expr.Compile(filters.Application, options...)
 	if err != nil {
-		return Metadata{}, err
+		return nil, nil, nil, err
 	}
-	metadata := Metadata{
-		Name:      taskDef.Name,
-		Client:    client,
-		OrgExpr:   orgExpr,
-		SpaceExpr: spaceExpr,
-		AppExpr:   appExpr,
-		Action:    action,
-	}
-	return metadata, nil
+	return orgExpr, spaceExpr, appExpr, nil
 }
 
 func (m *Metadata) IsOrgMatch(vars Variables) (bool, error) {
-	return isMatch(m.OrgExpr, vars)
+	return m.isMatch(m.OrgExpr, vars)
 }
 func (m *Metadata) IsSpaceMatch(vars Variables) (bool, error) {
-	return isMatch(m.SpaceExpr, vars)
+	return m.isMatch(m.SpaceExpr, vars)
 }
 func (m *Metadata) IsAppMatch(vars Variables) (bool, error) {
-	return isMatch(m.AppExpr, vars)
+	return m.isMatch(m.AppExpr, vars)
 }
 
-func isMatch(pgm *vm.Program, vars Variables) (bool, error) {
-	env, err := toEnv(vars)
+func (m *Metadata) isMatch(pgm *vm.Program, vars Variables) (bool, error) {
+	env, err := toEnv(vars, m.Logger)
 	if err != nil {
 		return false, err
 	}
@@ -90,7 +108,20 @@ func isMatch(pgm *vm.Program, vars Variables) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return util.IsTrue(result)
+	return isTrue(result)
+}
+
+func isTrue(i interface{}) (bool, error) {
+	switch t := i.(type) {
+	case int:
+		return i != 0, nil
+	case string:
+		return i != "", nil
+	case bool:
+		return i.(bool), nil
+	default:
+		return false, fmt.Errorf("unable to test type '%s', value '%s'", t, i)
+	}
 }
 
 type RunEnv struct {
@@ -100,7 +131,7 @@ type RunEnv struct {
 	datetime
 }
 
-func toEnv(vars Variables) (interface{}, error) {
+func toEnv(vars Variables, logger log.Logger) (interface{}, error) {
 	orgMap, err := toMap(vars.Org)
 	if err != nil {
 		return nil, err
@@ -118,6 +149,7 @@ func toEnv(vars Variables) (interface{}, error) {
 		Space: spaceMap,
 		App:   appMap,
 	}
+	env.logger = logger
 	return env, nil
 }
 func toMap(obj interface{}) (map[string]interface{}, error) {
@@ -134,19 +166,21 @@ func toMap(obj interface{}) (map[string]interface{}, error) {
 }
 
 // See: https://github.com/antonmedv/expr/blob/master/docs/examples/dates_test.go
-type datetime struct{}
+type datetime struct {
+	logger log.Logger
+}
 
 func (datetime) Date(s string) time.Time {
 	t, err := time.Parse(time.RFC3339, s)
 	if err != nil {
-		panic(err)
+		logger.Errorf("date parse: %v", err)
 	}
 	return t
 }
 func (datetime) Duration(s string) time.Duration {
 	d, err := time.ParseDuration(s)
 	if err != nil {
-		panic(err)
+		logger.Errorf("duration parse: %v", err)
 	}
 	return d
 }
@@ -163,3 +197,4 @@ func (datetime) BeforeDuration(a, b time.Duration) bool        { return a < b }
 func (datetime) BeforeOrEqualDuration(a, b time.Duration) bool { return a <= b }
 func (datetime) AfterDuration(a, b time.Duration) bool         { return a > b }
 func (datetime) AfterOrEqualDuration(a, b time.Duration) bool  { return a >= b }
+func (d datetime) Since(s string) time.Duration                { return time.Since(d.Date(s)) }

@@ -11,14 +11,14 @@ applications:
   command: scullion run
   health-check-type: process
   env:
-    GOVERSION: go1.13
+    GOVERSION: go1.14
     SCULLION_DRY_RUN: true
     SCULLION_TASKS: >
       [
           {
               "name": "stop non-prod apps",
               "schedule": {
-                  "frequency": "30m"
+                  "frequency": "5m"
               },
               "filters": {
                   "organization": "Org.name != 'system'",
@@ -30,7 +30,7 @@ applications:
           {
               "name": "delete stoped non-prod apps",
               "schedule": {
-                  "frequency": "1h"
+                  "frequency": "15m"
               },
               "filters": {
                   "organization": "Org.name != 'system'",
