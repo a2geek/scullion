@@ -11,6 +11,9 @@ Cleans up after your Cloud Foundry development activities, so you don't have to.
 Beyond what is noted elsewhere, additional items:
 
 * Decide if the Golang model should be kept or switch to the JSON structures as Cloud Foundry returns
+* Add web component to include `/health` and ... stats?
+* Routes?
+* How to structure rules to be more dynamic? (still need to use hierarchy once it's begun)
 
 # Usage
 
