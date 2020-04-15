@@ -71,9 +71,14 @@ func (cmd *Validate) validate(taskDefs []config.TaskDef) bool {
 		App:   app.Entity,
 	}
 
+	runOpts := option.RunOptions{
+		DryRun: false,
+		Level:  "INFO",
+		NoDate: false,
+	}
 	for _, taskDef := range taskDefs {
 		fails := 0
-		m, err := task.NewMetadata(taskDef, nil, action.Log, "INFO")
+		m, err := task.NewMetadata(taskDef, nil, action.Log, runOpts)
 		if err != nil {
 			fmt.Printf("Unable to compile expressions for task '%s': %s\n", taskDef.Name, err)
 			fails++

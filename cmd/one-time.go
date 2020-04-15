@@ -34,19 +34,19 @@ func (cmd *OneTime) Execute(args []string) error {
 	var wg sync.WaitGroup
 	for i := 0; i < cmd.OrgPool; i++ {
 		wg.Add(1)
-		go worker.Org(i, orgChan, spaceChan, &wg, cmd.Level)
+		go worker.Org(i, orgChan, spaceChan, &wg, cmd.RunOptions)
 	}
 	for i := 0; i < cmd.SpacePool; i++ {
 		wg.Add(1)
-		go worker.Space(i, spaceChan, appChan, &wg, cmd.Level)
+		go worker.Space(i, spaceChan, appChan, &wg, cmd.RunOptions)
 	}
 	for i := 0; i < cmd.AppPool; i++ {
 		wg.Add(1)
-		go worker.App(i, appChan, actionChan, &wg, cmd.Level)
+		go worker.App(i, appChan, actionChan, &wg, cmd.RunOptions)
 	}
 	for i := 0; i < cmd.ActionPool; i++ {
 		wg.Add(1)
-		go worker.Action(i, actionChan, &wg, cmd.Level)
+		go worker.Action(i, actionChan, &wg, cmd.RunOptions)
 	}
 
 	// Cannot use Task directly as it has the timer embedded
@@ -55,7 +55,7 @@ func (cmd *OneTime) Execute(args []string) error {
 		if err != nil {
 			panic(err)
 		}
-		metadata, err := task.NewMetadata(taskDef, client, actionFunc, cmd.Level)
+		metadata, err := task.NewMetadata(taskDef, client, actionFunc, cmd.RunOptions)
 		if err != nil {
 			panic(err)
 		}

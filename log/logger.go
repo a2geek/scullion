@@ -7,8 +7,11 @@ import (
 	"os"
 )
 
-func NewLogger(prefix, level string) (Logger, error) {
+func NewLogger(prefix, level string, noDate bool) (Logger, error) {
 	flags := golog.LstdFlags | golog.Lmsgprefix
+	if noDate {
+		flags = 0
+	}
 	prefix = fmt.Sprintf("[%s] ", prefix)
 	switch level {
 	case "DEBUG":

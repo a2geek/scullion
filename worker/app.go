@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"net/url"
 	"scullion/log"
+	"scullion/option"
 	"scullion/task"
 	"sync"
 )
 
-func App(num int, appChan <-chan task.Item, actionChan chan<- task.Item, wg *sync.WaitGroup, logLevel string) {
-	logger, err := log.NewLogger(fmt.Sprintf("app worker %d", num), logLevel)
+func App(num int, appChan <-chan task.Item, actionChan chan<- task.Item, wg *sync.WaitGroup, runOpts option.RunOptions) {
+	logger, err := log.NewLogger(fmt.Sprintf("app worker %d", num), runOpts.Level, runOpts.NoDate)
 	if err != nil {
 		panic(err)
 	}

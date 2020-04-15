@@ -13,7 +13,7 @@ import (
 )
 
 func Task(num int, taskDef config.TaskDef, client *cfclient.Client, orgChan chan<- task.Item, runOptions option.RunOptions) {
-	logger, err := log.NewLogger(fmt.Sprintf("task worker %d", num), runOptions.Level)
+	logger, err := log.NewLogger(fmt.Sprintf("task worker %d", num), runOptions.Level, runOptions.NoDate)
 	if err != nil {
 		panic(err)
 	}
@@ -28,7 +28,7 @@ func Task(num int, taskDef config.TaskDef, client *cfclient.Client, orgChan chan
 		return
 	}
 
-	metadata, err := task.NewMetadata(taskDef, client, actionFunc, runOptions.Level)
+	metadata, err := task.NewMetadata(taskDef, client, actionFunc, runOptions)
 	if err != nil {
 		logger.Errorf("halting: %v", err)
 		return

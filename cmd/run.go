@@ -29,7 +29,7 @@ func (cmd *Run) Execute(args []string) error {
 		panic(err)
 	}
 
-	logger, err := log.NewLogger("main", cmd.Level)
+	logger, err := log.NewLogger("main", cmd.Level, cmd.NoDate)
 	if err != nil {
 		panic(err)
 	}
@@ -43,22 +43,22 @@ func (cmd *Run) Execute(args []string) error {
 	var wg sync.WaitGroup
 	for i := 0; i < cmd.OrgPool; i++ {
 		wg.Add(1)
-		go worker.Org(i, orgChan, spaceChan, &wg, cmd.Level)
+		go worker.Org(i, orgChan, spaceChan, &wg, cmd.RunOptions)
 		logger.Debugf("started org worker %d", i)
 	}
 	for i := 0; i < cmd.SpacePool; i++ {
 		wg.Add(1)
-		go worker.Space(i, spaceChan, appChan, &wg, cmd.Level)
+		go worker.Space(i, spaceChan, appChan, &wg, cmd.RunOptions)
 		logger.Debugf("started space worker %d", i)
 	}
 	for i := 0; i < cmd.AppPool; i++ {
 		wg.Add(1)
-		go worker.App(i, appChan, actionChan, &wg, cmd.Level)
+		go worker.App(i, appChan, actionChan, &wg, cmd.RunOptions)
 		logger.Debugf("started app worker %d", i)
 	}
 	for i := 0; i < cmd.ActionPool; i++ {
 		wg.Add(1)
-		go worker.Action(i, actionChan, &wg, cmd.Level)
+		go worker.Action(i, actionChan, &wg, cmd.RunOptions)
 		logger.Debugf("started action worker %d", i)
 	}
 

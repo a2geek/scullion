@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"scullion/config"
 	"scullion/log"
+	"scullion/option"
 	"time"
 
 	"github.com/antonmedv/expr"
@@ -23,8 +24,8 @@ type Metadata struct {
 	Logger    log.Logger
 }
 
-func NewMetadata(taskDef config.TaskDef, client *cfclient.Client, action func(Item), logLevel string) (Metadata, error) {
-	logger, err := log.NewLogger(taskDef.Name, logLevel)
+func NewMetadata(taskDef config.TaskDef, client *cfclient.Client, action func(Item), runOpts option.RunOptions) (Metadata, error) {
+	logger, err := log.NewLogger(taskDef.Name, runOpts.Level, runOpts.NoDate)
 	if err != nil {
 		return Metadata{}, err
 	}

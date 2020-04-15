@@ -3,12 +3,13 @@ package worker
 import (
 	"fmt"
 	"scullion/log"
+	"scullion/option"
 	"scullion/task"
 	"sync"
 )
 
-func Action(num int, actionChan <-chan task.Item, wg *sync.WaitGroup, logLevel string) {
-	logger, err := log.NewLogger(fmt.Sprintf("action worker %d", num), logLevel)
+func Action(num int, actionChan <-chan task.Item, wg *sync.WaitGroup, runOpts option.RunOptions) {
+	logger, err := log.NewLogger(fmt.Sprintf("action worker %d", num), runOpts.Level, runOpts.NoDate)
 	if err != nil {
 		panic(err)
 	}

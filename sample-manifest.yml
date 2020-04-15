@@ -13,6 +13,7 @@ applications:
   env:
     GOVERSION: go1.14
     SCULLION_DRY_RUN: true
+    SCULLION_NO_TIMESTAMP: true
     SCULLION_TASKS: >
       [
           {
