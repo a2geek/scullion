@@ -3,6 +3,7 @@ package cmd
 import (
 	"os"
 	"os/signal"
+	"scullion/log"
 	"scullion/option"
 	"scullion/task"
 	"scullion/worker"
@@ -28,6 +29,12 @@ func (cmd *Run) Execute(args []string) error {
 		panic(err)
 	}
 
+	logger, err := log.NewLogger("main", cmd.Level)
+	if err != nil {
+		panic(err)
+	}
+	logger.Info("Started")
+
 	orgChan := make(chan task.Item)
 	spaceChan := make(chan task.Item)
 	appChan := make(chan task.Item)
@@ -37,31 +44,39 @@ func (cmd *Run) Execute(args []string) error {
 	for i := 0; i < cmd.OrgPool; i++ {
 		wg.Add(1)
 		go worker.Org(i, orgChan, spaceChan, &wg, cmd.Level)
+		logger.Debugf("started org worker %d", i)
 	}
 	for i := 0; i < cmd.SpacePool; i++ {
 		wg.Add(1)
 		go worker.Space(i, spaceChan, appChan, &wg, cmd.Level)
+		logger.Debugf("started space worker %d", i)
 	}
 	for i := 0; i < cmd.AppPool; i++ {
 		wg.Add(1)
 		go worker.App(i, appChan, actionChan, &wg, cmd.Level)
+		logger.Debugf("started app worker %d", i)
 	}
 	for i := 0; i < cmd.ActionPool; i++ {
 		wg.Add(1)
 		go worker.Action(i, actionChan, &wg, cmd.Level)
+		logger.Debugf("started action worker %d", i)
 	}
 
 	for i, task := range tasks {
 		go worker.Task(i, task, client, orgChan, cmd.RunOptions)
+		logger.Debugf("started task worker '%s'", task.Name)
 	}
 
+	logger.Info("Running...")
 	termChan := make(chan os.Signal)
 	signal.Notify(termChan, syscall.SIGINT, syscall.SIGTERM)
 	<-termChan
 
 	// Begin cascade of shutting down...
+	logger.Info("Terminate request received. Shutting down...")
 	close(orgChan)
 	wg.Wait()
+	logger.Info("Terminating. Bye!")
 
 	return nil
 }
