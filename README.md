@@ -6,16 +6,15 @@
 
 Cleans up after your Cloud Foundry development activities, so you don't have to.
 
-# TODO
+## TODO
 
 Beyond what is noted elsewhere, additional items:
 
 * Decide if the Golang model should be kept or switch to the JSON structures as Cloud Foundry returns
-* Add web component to include `/health` and ... stats?
-* Routes?
+* Add web component to include stats?
 * How to structure rules to be more dynamic? (still need to use hierarchy once it's begun)
 
-# Usage
+## Usage
 
 Scullion has multiple sub-commands:
 
@@ -26,7 +25,13 @@ Scullion has multiple sub-commands:
 
 Both `run` and `one-time` have a dry-run mode to allow observation prior to taking action.
 
-# Configuration
+## Web endpoints
+
+`/health` always returns with success.
+
+`/config` displays currently running configuration.
+
+## Configuration
 
 For each rule, it consists of:
 
@@ -35,7 +40,7 @@ For each rule, it consists of:
 * Filters to select organizations, spaces, and applications.
 * An action to take on applications that match.
 
-## Actions
+### Actions
 
 The following actions are allowed:
 
@@ -45,7 +50,7 @@ The following actions are allowed:
 
 Note that `stop-app` and `delete-app` are modified by the `--dry-run` flag.
 
-## Filters
+### Filters
 
 Filters can be applied at any of these levels:
 
@@ -57,11 +62,11 @@ Each step in the filter hierarchy contains the results from the prior steps. Thu
 
 TODO: If a rule only applies to spaces, the workers will begin processing against a space and skip organizations entirely. Same optimization applies to applications.
 
-## Rules (tasks)
+### Rules (tasks)
 
 Scullion configuration consists of a number of tasks.  The general layout is done in JSON like this:
 
-```
+```json
 [
     {
         "name": "a sample",
@@ -85,7 +90,7 @@ Scullion configuration consists of a number of tasks.  The general layout is don
 
 Configuration can be specified via an environment variable or a file. Most likely, with Cloud Foundry, this will be an via the manifest like this:
 
-```
+```yaml
   env:
     SCULLION_CONFIG: >
       {
@@ -95,11 +100,11 @@ Configuration can be specified via an environment variable or a file. Most likel
 
 (see `manifest.yml` for working sample)
 
-# CLI snapshots
+## CLI snapshots
 
 (From development version)
 
-```
+```shell
 $ go run main.go --help
 Usage:
   main [OPTIONS] <command>
@@ -114,7 +119,7 @@ Available commands:
   validate
 ```
 
-```
+```shell
 $ go run main.go disasm --help
 Usage:
   main [OPTIONS] disassemble [disassemble-OPTIONS]
@@ -129,7 +134,7 @@ Help Options:
       -f, --file= Read configuration from given file
 ```
 
-```
+```shell
 $ go run main.go validate --help
 Usage:
   main [OPTIONS] validate [validate-OPTIONS]
@@ -144,7 +149,7 @@ Help Options:
       -f, --file= Read configuration from given file
 ```
 
-```
+```shell
 $ go run main.go one-time --help
 Usage:
   main [OPTIONS] one-time [one-time-OPTIONS]
@@ -157,6 +162,7 @@ Help Options:
     Run Options:
           --dry-run                              Perform a dry run and log actions that would be taken [$SCULLION_DRY_RUN]
       -l, --log-level=[ERROR|WARNING|INFO|DEBUG] Set the logging level (default: INFO) [$SCULLION_LOG_LEVEL]
+          --no-timestamp                         Suppress timestamp from logs (useful if other components add date) [$SCULLION_NO_TIMESTAMP]
 
     Task Options:
       -e, --env=                                 Load configuration from environment variable (default: SCULLION_TASKS)
@@ -175,7 +181,7 @@ Help Options:
       -k, --cf-skip-ssl-validation               Skip SSL validation of Cloud Foundry endpoint; not recommended [$CF_SKIP_SSL_VALIDATION]
 ```
 
-```
+```shell
 $ go run main.go run --help
 Usage:
   main [OPTIONS] run [run-OPTIONS]
@@ -184,10 +190,12 @@ Help Options:
   -h, --help                                     Show this help message
 
 [run command options]
+          --port=                                Set the port number for the web server (0=off) (default: 8080) [$PORT]
 
     Run Options:
           --dry-run                              Perform a dry run and log actions that would be taken [$SCULLION_DRY_RUN]
       -l, --log-level=[ERROR|WARNING|INFO|DEBUG] Set the logging level (default: INFO) [$SCULLION_LOG_LEVEL]
+          --no-timestamp                         Suppress timestamp from logs (useful if other components add date) [$SCULLION_NO_TIMESTAMP]
 
     Task Options:
       -e, --env=                                 Load configuration from environment variable (default: SCULLION_TASKS)
@@ -204,5 +212,4 @@ Help Options:
       -u, --cf-username=                         Username [$CF_USERNAME]
       -p, --cf-password=                         Password [$CF_PASSWORD]
       -k, --cf-skip-ssl-validation               Skip SSL validation of Cloud Foundry endpoint; not recommended [$CF_SKIP_SSL_VALIDATION]
-
 ```
