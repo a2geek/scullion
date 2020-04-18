@@ -21,7 +21,7 @@ Scullion has multiple sub-commands:
 * `run` is intended to run the rules continuously against a foundation. This is the most used use case.
 * `validate` allows validation of the task configuration; both the expression syntax as well as the object model (by way of sample data pulled from a running foundation).
 * `one-time` executes the rules once.
-* TODO: `reference` dump out the object model to assist in scripting.
+* `reference` dump out the object model to assist in scripting.
 
 Both `run` and `one-time` have a dry-run mode to allow observation prior to taking action.
 
@@ -212,4 +212,29 @@ Help Options:
       -u, --cf-username=                         Username [$CF_USERNAME]
       -p, --cf-password=                         Password [$CF_PASSWORD]
       -k, --cf-skip-ssl-validation               Skip SSL validation of Cloud Foundry endpoint; not recommended [$CF_SKIP_SSL_VALIDATION]
+```
+
+```script
+$ go run main.go reference
+Note that methods prefixed with an operation usually have that operator overloaded.
+Thereform, 'Add' for a Time and Duration can be expressed 'time + duration'.
+This list is dynamically generated at run time, so should be accurate for your version.
+
+Operations:
+  Add(time.Time, time.Duration) time.Time
+  After(time.Time, time.Time) bool
+  AfterDuration(time.Duration, time.Duration) bool
+  AfterOrEqual(time.Time, time.Time) bool
+  AfterOrEqualDuration(time.Duration, time.Duration) bool
+  Before(time.Time, time.Time) bool
+  BeforeDuration(time.Duration, time.Duration) bool
+  BeforeOrEqual(time.Time, time.Time) bool
+  BeforeOrEqualDuration(time.Duration, time.Duration) bool
+  Date(string) time.Time
+  Duration(string) time.Duration
+  Equal(time.Time, time.Time) bool
+  EqualDuration(time.Duration, time.Duration) bool
+  Now() time.Time
+  Since(string) time.Duration
+  Sub(time.Time, time.Time) time.Duration
 ```
