@@ -1,15 +1,13 @@
 ---
 applications:
 - name: scullion
-  no-route: true
-  # routes:
-  # - route: TBD?
   buildpacks:
   - go_buildpack
   memory: 32m
   instances: 1
   command: scullion run
-  health-check-type: process
+  health-check-type: http
+  health-check-http-endpoint: /health
   env:
     GOVERSION: go1.14
     SCULLION_DRY_RUN: true

@@ -6,12 +6,15 @@ import (
 	"scullion/log"
 	"scullion/option"
 	"scullion/task"
+	"scullion/web"
 	"scullion/worker"
 	"sync"
 	"syscall"
 )
 
 type Run struct {
+	Port int `long:"port" default:"8080" env:"PORT" description:"Set the port number for the web server (0=off)"`
+
 	option.RunOptions          `group:"Run Options"`
 	option.TaskOptions         `group:"Task Options"`
 	option.WorkerPools         `group:"Worker Pools" namespace:"worker" env-namespace:"WORKER"`
@@ -65,6 +68,10 @@ func (cmd *Run) Execute(args []string) error {
 	for i, task := range tasks {
 		go worker.Task(i, task, client, orgChan, cmd.RunOptions)
 		logger.Debugf("started task worker '%s'", task.Name)
+	}
+
+	if cmd.Port > 0 {
+		go web.Serve(cmd.Port)
 	}
 
 	logger.Info("Running...")
