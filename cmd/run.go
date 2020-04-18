@@ -22,7 +22,7 @@ type Run struct {
 }
 
 func (cmd *Run) Execute(args []string) error {
-	tasks, err := cmd.ReadConfiguration()
+	taskDefs, err := cmd.ReadConfiguration()
 	if err != nil {
 		return err
 	}
@@ -65,13 +65,13 @@ func (cmd *Run) Execute(args []string) error {
 		logger.Debugf("started action worker %d", i)
 	}
 
-	for i, task := range tasks {
+	for i, task := range taskDefs {
 		go worker.Task(i, task, client, orgChan, cmd.RunOptions)
 		logger.Debugf("started task worker '%s'", task.Name)
 	}
 
 	if cmd.Port > 0 {
-		go web.Serve(cmd.Port)
+		go web.Serve(cmd.Port, taskDefs)
 	}
 
 	logger.Info("Running...")
