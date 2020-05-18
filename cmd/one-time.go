@@ -1,9 +1,10 @@
 package cmd
 
 import (
-	"scullion/action"
+	"scullion/ctx"
+	"scullion/fn"
+	"scullion/log"
 	"scullion/option"
-	"scullion/task"
 	"scullion/worker"
 	"sync"
 )
@@ -11,12 +12,11 @@ import (
 type OneTime struct {
 	option.RunOptions          `group:"Run Options"`
 	option.TaskOptions         `group:"Task Options"`
-	option.WorkerPools         `group:"Worker Pools" namespace:"worker" env-namespace:"WORKER"`
 	option.CloudFoundryOptions `group:"Cloud Foundry Configuration" namespace:"cf" env-namespace:"CF" reqired:"yes"`
 }
 
 func (cmd *OneTime) Execute(args []string) error {
-	tasks, err := cmd.ReadConfiguration()
+	cfg, err := cmd.ReadConfiguration()
 	if err != nil {
 		return err
 	}
@@ -26,48 +26,52 @@ func (cmd *OneTime) Execute(args []string) error {
 		panic(err)
 	}
 
-	orgChan := make(chan task.Item)
-	spaceChan := make(chan task.Item)
-	appChan := make(chan task.Item)
-	actionChan := make(chan task.Item)
+	registrars := []fn.Registrar{
+		fn.NewCfCurlRegistrar(client),
+		fn.NewDatetimeRegistrar(),
+		fn.NewFiltererRegistrar(),
+		// fn.NewLibraryRegistrar(lib),
+		fn.NewTemplateRegistrar(cfg.Templates),
+	}
+
+	logger, err := log.NewLogger("main", cmd.Level, cmd.NoDate)
+	if err != nil {
+		panic(err)
+	}
+	logger.Info("Started")
+
+	stateChan := make(chan *ctx.State)
 
 	var wg sync.WaitGroup
-	for i := 0; i < cmd.OrgPool; i++ {
+	for i := 0; i < cmd.WorkerPool; i++ {
 		wg.Add(1)
-		go worker.Org(i, orgChan, spaceChan, &wg, cmd.RunOptions)
-	}
-	for i := 0; i < cmd.SpacePool; i++ {
-		wg.Add(1)
-		go worker.Space(i, spaceChan, appChan, &wg, cmd.RunOptions)
-	}
-	for i := 0; i < cmd.AppPool; i++ {
-		wg.Add(1)
-		go worker.App(i, appChan, actionChan, &wg, cmd.RunOptions)
-	}
-	for i := 0; i < cmd.ActionPool; i++ {
-		wg.Add(1)
-		go worker.Action(i, actionChan, &wg, cmd.RunOptions)
+		go worker.Task(i, stateChan, &wg, cmd.RunOptions)
+		logger.Debugf("started task worker %d", i)
 	}
 
 	// Cannot use Task directly as it has the timer embedded
-	for _, taskDef := range tasks {
-		actionFunc, err := action.NewActionFunc(taskDef.Filters.Action, cmd.DryRun)
+	for _, ruleDef := range cfg.Rules {
+		logrule, err := log.NewLogger(ruleDef.Name, cmd.Level, cmd.NoDate)
 		if err != nil {
 			panic(err)
 		}
-		metadata, err := task.NewMetadata(taskDef, client, actionFunc, cmd.RunOptions)
+
+		subpgm, err := ctx.NewSubprogram(ruleDef.Name, ruleDef.Pipeline, ruleDef.Actions, logrule)
 		if err != nil {
 			panic(err)
 		}
-		taskItem := task.Item{
-			Metadata: metadata,
+
+		state := ctx.NewState(subpgm.Dup(), stateChan)
+		for _, registerFuncs := range registrars {
+			registerFuncs(state)
 		}
-		orgChan <- taskItem
+		stateChan <- state
 	}
 
 	// Begin cascade of shutting down...
-	close(orgChan)
+	close(stateChan)
 	wg.Wait()
+	logger.Info("Terminating. Bye!")
 
 	return nil
 }

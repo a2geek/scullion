@@ -14,36 +14,36 @@ type TaskOptions struct {
 	FileName string `short:"f" long:"file" description:"Read configuration from given file"`
 }
 
-func (o *TaskOptions) loadTaskDefs(data []byte) ([]config.TaskDef, error) {
-	taskDefs := make([]config.TaskDef, 0)
-	err := json.Unmarshal(data, &taskDefs)
+func (o *TaskOptions) loadRuleDefs(data []byte) (config.Config, error) {
+	cfg := config.Config{}
+	err := json.Unmarshal(data, &cfg)
 	if err != nil {
-		return nil, fmt.Errorf("unable to unmarshal configuration: %w", err)
+		return cfg, fmt.Errorf("unable to unmarshal configuration: %w", err)
 	}
-	if len(taskDefs) == 0 {
-		return nil, errors.New("please specify a configuration with tasks; nothing to do")
+	if len(cfg.Rules) == 0 {
+		return cfg, errors.New("please specify a configuration with tasks; nothing to do")
 	}
-	fmt.Printf("Loaded %d tasks\n", len(taskDefs))
-	return taskDefs, nil
+	fmt.Printf("Loaded %d rules, %d templates, and library of %d subprograms\n", len(cfg.Rules), len(cfg.Templates), len(cfg.Library))
+	return cfg, nil
 }
 
-func (o *TaskOptions) ReadConfiguration() ([]config.TaskDef, error) {
+func (o *TaskOptions) ReadConfiguration() (config.Config, error) {
 	if o.EnvVar != "" {
 		envValue := os.Getenv(o.EnvVar)
 		if envValue != "" {
 			if o.FileName != "" {
-				return nil, errors.New("both configuration options specified; please choose one")
+				return config.Config{}, errors.New("both configuration options specified; please choose one")
 			}
 			fmt.Printf("Using environment variable %s\n", o.EnvVar)
-			return o.loadTaskDefs([]byte(envValue))
+			return o.loadRuleDefs([]byte(envValue))
 		}
 	}
 	if o.FileName != "" {
 		data, err := ioutil.ReadFile(o.FileName)
 		if err != nil {
-			return nil, fmt.Errorf("unable to read configuration file: %w", err)
+			return config.Config{}, fmt.Errorf("unable to read configuration file: %w", err)
 		}
-		return o.loadTaskDefs(data)
+		return o.loadRuleDefs(data)
 	}
-	return nil, fmt.Errorf("no configuration specified and variable '%s' is unset", o.EnvVar)
+	return config.Config{}, fmt.Errorf("no configuration specified and variable '%s' is unset", o.EnvVar)
 }

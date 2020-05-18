@@ -1,0 +1,101 @@
+---
+library:
+- name: apps-to-consider
+  # alt_pipeline:
+  # - GET('/v2/organizations') -> 'org'
+  # - Filter(org.entity.name != 'system')
+  # - GET(org.entity.spaces_url) -> 'space'
+  # - Filter(space.entity.name != 'prod')
+  # - GET(space.entity.apps_url) -> 'app'
+  pipeline:
+  - GET('/v2/organizations', 'org')
+  - Filter(org.entity.name != 'system')
+  - GET(org.entity.spaces_url, 'space')
+  - Filter(space.entity.name != 'prod')
+  - GET(space.entity.apps_url, 'app')
+- name: stop-app
+  pipeline:
+  - PUT(app.metadata.url, Template('StopApp'))
+- name: unbind-app-services
+  pipeline:
+  - GET(app.entity.service_bindings_url, 'service_binding')
+  - DELETE(service_binding.metadata.url)
+- name: delete-app
+  pipeline:
+  - DELETE(app.metadata.url)
+
+templates:
+  StopApp: >
+    {
+      "state": "STOPPED"
+    }
+  SpaceDeveloper: >
+    {
+      "type": "space_developer", 
+      "relationships": { 
+        "user": {
+          "data": {
+            "guid": "%s"
+          }
+        },
+        "space": {
+          "data": {
+            "guid": "%s"
+          }
+        }
+      }
+    }
+
+rules:
+- name: stop non-prod apps
+  schedule:
+    frequency: 1h
+  pipeline:
+  - Use('apps-to-consider')
+  - Filter(app.state == 'STARTED' && Since(app.updated_at) > Duration('1h'))
+  actions:
+  - Use('stop-app')
+
+- name: delete stopped non-prod apps
+  schedule:
+    frequency: 3h
+  pipeline:
+  - Use('apps-to-consider')
+  - Filter(app.state == 'STOPPED' && Since(app.updated_at) > Duration('36h'))
+  actions:
+  - Use('stop-app')
+  - Use('unbind-app-services')
+  - Use('delete-app')
+
+- name: delete unbound routes
+  schedule:
+    frequency: 3h
+  pipeline:
+  - GET('/v3/routes', 'route')
+  - Filter(len(route.destinations) == 0)
+  actions:
+  - DELETE(route.links.self)
+
+# V3 -- but V3 does not have a mechanism to query based on an event guid or timestamp
+# - name: what would events look like (V3)
+#   audit_events:
+#     frequency: 5m
+#     variable: audit_event
+#     list:
+#     - audit.space.create
+#   pipeline:
+#   - GetResources(Concat('/v3/roles?organization_guids=', audit_event.organization.guid, '&types=organization_manager'), 'role')
+#   actions:
+#   - POST('/v3/roles', Template('SpaceDeveloper', role.relationships.user.data.guid, audit_event.space.guid))
+
+# V2 -- V2 is deprecated but allows a timestamp query parameter
+# - name: what would events look like (V2)
+#   events:
+#     frequency: 5m
+#     variable: event
+#     list:
+#     - audit.space.create
+#   pipeline:
+#   - GetResources(Template('OrgManagerRoleQuery', event.organization_guid), 'role')
+#   actions:
+#   - POST('/v3/roles', Template('SpaceDeveloper', role.relationships.user.data.guid, event.space_guid))

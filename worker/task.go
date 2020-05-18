@@ -2,50 +2,24 @@ package worker
 
 import (
 	"fmt"
-	"scullion/action"
-	"scullion/config"
+	"scullion/ctx"
 	"scullion/log"
 	"scullion/option"
-	"scullion/task"
-	"time"
-
-	"github.com/cloudfoundry-community/go-cfclient"
+	"sync"
 )
 
-func Task(num int, taskDef config.TaskDef, client *cfclient.Client, orgChan chan<- task.Item, runOptions option.RunOptions) {
-	logger, err := log.NewLogger(fmt.Sprintf("task worker %d", num), runOptions.Level, runOptions.NoDate)
+func Task(num int, stateChan chan *ctx.State, wg *sync.WaitGroup, runOpts option.RunOptions) {
+	logger, err := log.NewLogger(fmt.Sprintf("task worker %d", num), runOpts.Level, runOpts.NoDate)
 	if err != nil {
 		panic(err)
 	}
 	logger.Info("Launched")
 
-	// should something unrecoverable occur, close the channel which cascades ... to make it obvious!?
-	defer close(orgChan)
+	// if ctx channel closes, be certain we clean up the wait group!
+	defer wg.Done()
 
-	actionFunc, err := action.NewActionFunc(taskDef.Filters.Action, runOptions.DryRun)
-	if err != nil {
-		logger.Errorf("halting: %v", err)
-		return
-	}
-
-	metadata, err := task.NewMetadata(taskDef, client, actionFunc, runOptions)
-	if err != nil {
-		logger.Errorf("halting: %v", err)
-		return
-	}
-
-	dur, err := time.ParseDuration(taskDef.Schedule.Frequency)
-	if err != nil {
-		logger.Errorf("halting: %v", err)
-		return
-	}
-
-	for t := range time.Tick(dur) {
-		metadata.Logger.Infof("Tick at %s", t)
-		taskItem := task.Item{
-			Metadata: metadata,
-		}
-		orgChan <- taskItem
+	for ctx := range stateChan {
+		ctx.Execute()
 	}
 
 	logger.Error("exiting")
