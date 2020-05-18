@@ -10,9 +10,7 @@ Cleans up after your Cloud Foundry development activities, so you don't have to.
 
 Beyond what is noted elsewhere, additional items:
 
-* Decide if the Golang model should be kept or switch to the JSON structures as Cloud Foundry returns
 * Add web component to include stats?
-* How to structure rules to be more dynamic? (still need to use hierarchy once it's begun)
 
 ## Usage
 
@@ -33,58 +31,48 @@ Both `run` and `one-time` have a dry-run mode to allow observation prior to taki
 
 ## Configuration
 
-For each rule, it consists of:
+Scullion consists of a number of components:
+* Rules,
+* the Library (optional),
+* Templates (optional).
+
+### Rules
+
+For each rule, it consists of a number of components.
 
 * A name to identify what is triggering an action.
 * A schedule (for run mode).
-* Filters to select organizations, spaces, and applications.
-* An action to take on applications that match.
+* A pipeline for data flow. This is the main set of processing. Each step _must_ emit results for processing to continue. This both enables multi-result capability and filtering.
+* Actions. All actions are acted upon once a pipeline completes.
 
-### Actions
+#### Pipelines
 
-The following actions are allowed:
+A pipeline originates all data and processes all data. It can be structured as needed.
 
-* `log`
-* `stop-app`
-* `delete-app`
+The following capabilities are exposed:
+* Cloud Foundry API:
+  * `GET(path, name)`: Retrieve one value. The entire response is stored in the variable identified by `name`.
+  * `GetResources(path, name)`: Pages through a resource that contains a `resources` array. Each item in the `resources` array is emitted independently for the next step.
+  * `POST(path, body)`: POST `body` to the given API endpoint.
+  * `PUT(path, body)`: PUT `body` to the given API endpoint.
+* Filters:
+  * `Filter(expression)`: If true, emit current state. If false, processing stops.
+* Libraries:
+  * `Call(name)`: Call a subprogram in the library with current state.
+* Templates:
+  * `Template(name, parameters...)`: Allow templating, particularly for `POST(...)` or `PUT(...)` API calls. This is a very light wrapper around Go's `fmt.Sprintf(...)` and capabilities are described in [the package overview](https://golang.org/pkg/fmt/#pkg-overview).
 
-Note that `stop-app` and `delete-app` are modified by the `--dry-run` flag.
+### the Library
 
-### Filters
+TBD
 
-Filters can be applied at any of these levels:
+### Templates
 
-* Organization
-* Space
-* Application
+TBD
 
-Each step in the filter hierarchy contains the results from the prior steps. Thus, the organization filter only has the organization. Space filters include both space detail as well as organization (if it was processed), etc.
+### Putting it all together
 
-TODO: If a rule only applies to spaces, the workers will begin processing against a space and skip organizations entirely. Same optimization applies to applications.
-
-### Rules (tasks)
-
-Scullion configuration consists of a number of tasks.  The general layout is done in JSON like this:
-
-```json
-[
-    {
-        "name": "a sample",
-        "schedule": {
-            "frequency": "1h"
-        },
-        "filters": {
-            "organization": "Org.name != 'system'",
-            "space": "Space.name == 'test'",
-            "application": "App.state == 'STARTED' && (Now() - Date(App.updated_at)) > Duration('1H')",
-            "action": "stop-app"
-        }
-    },
-    {
-      <snip>
-    }
-]
-```
+TBD
 
 (see `sample.json` for working sample)
 
