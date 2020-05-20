@@ -12,35 +12,38 @@ func NewLogger(prefix, level string, noDate bool) (Logger, error) {
 	if noDate {
 		flags = 0
 	}
-	prefix = fmt.Sprintf("[%s] ", prefix)
+	debugPrefix := fmt.Sprintf("[DEBUG:%s] ", prefix)
+	infoPrefix := fmt.Sprintf("[INFO:%s] ", prefix)
+	warnPrefix := fmt.Sprintf("[WARN:%s] ", prefix)
+	errorPrefix := fmt.Sprintf("[ERROR:%s] ", prefix)
 	switch level {
 	case "DEBUG":
 		return logger{
-			debugLog: golog.New(os.Stdout, prefix, flags),
-			infoLog:  golog.New(os.Stdout, prefix, flags),
-			warnLog:  golog.New(os.Stdout, prefix, flags),
-			errorLog: golog.New(os.Stderr, prefix, flags),
+			debugLog: golog.New(os.Stdout, debugPrefix, flags),
+			infoLog:  golog.New(os.Stdout, infoPrefix, flags),
+			warnLog:  golog.New(os.Stdout, warnPrefix, flags),
+			errorLog: golog.New(os.Stderr, errorPrefix, flags),
 		}, nil
 	case "INFO":
 		return logger{
-			debugLog: golog.New(ioutil.Discard, prefix, flags),
-			infoLog:  golog.New(os.Stdout, prefix, flags),
-			warnLog:  golog.New(os.Stdout, prefix, flags),
-			errorLog: golog.New(os.Stderr, prefix, flags),
+			debugLog: golog.New(ioutil.Discard, debugPrefix, flags),
+			infoLog:  golog.New(os.Stdout, infoPrefix, flags),
+			warnLog:  golog.New(os.Stdout, warnPrefix, flags),
+			errorLog: golog.New(os.Stderr, errorPrefix, flags),
 		}, nil
 	case "WARN":
 		return logger{
-			debugLog: golog.New(ioutil.Discard, prefix, flags),
-			infoLog:  golog.New(ioutil.Discard, prefix, flags),
-			warnLog:  golog.New(os.Stdout, prefix, flags),
-			errorLog: golog.New(os.Stderr, prefix, flags),
+			debugLog: golog.New(ioutil.Discard, debugPrefix, flags),
+			infoLog:  golog.New(ioutil.Discard, infoPrefix, flags),
+			warnLog:  golog.New(os.Stdout, warnPrefix, flags),
+			errorLog: golog.New(os.Stderr, errorPrefix, flags),
 		}, nil
 	case "ERROR":
 		return logger{
-			debugLog: golog.New(ioutil.Discard, prefix, flags),
-			infoLog:  golog.New(ioutil.Discard, prefix, flags),
-			warnLog:  golog.New(ioutil.Discard, prefix, flags),
-			errorLog: golog.New(os.Stderr, prefix, flags),
+			debugLog: golog.New(ioutil.Discard, debugPrefix, flags),
+			infoLog:  golog.New(ioutil.Discard, infoPrefix, flags),
+			warnLog:  golog.New(ioutil.Discard, warnPrefix, flags),
+			errorLog: golog.New(os.Stderr, errorPrefix, flags),
 		}, nil
 	}
 	return nil, fmt.Errorf("unknown log level '%s'", level)
