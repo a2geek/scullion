@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"os"
 	"scullion/config"
+
+	yaml "gopkg.in/yaml.v2"
 )
 
 type TaskOptions struct {
@@ -14,11 +16,15 @@ type TaskOptions struct {
 	FileName string `short:"f" long:"file" description:"Read configuration from given file"`
 }
 
+// loadRuleDefs is a brute-force JSON or YAML loader; it first tries JSON, then YAML, and _then_ fails.
 func (o *TaskOptions) loadRuleDefs(data []byte) (config.Config, error) {
 	cfg := config.Config{}
 	err := json.Unmarshal(data, &cfg)
 	if err != nil {
-		return cfg, fmt.Errorf("unable to unmarshal configuration: %w", err)
+		err = yaml.Unmarshal(data, &cfg)
+		if err != nil {
+			return cfg, fmt.Errorf("unable to unmarshal configuration: %w", err)
+		}
 	}
 	if len(cfg.Rules) == 0 {
 		return cfg, errors.New("please specify a configuration with tasks; nothing to do")
