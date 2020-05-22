@@ -4,8 +4,6 @@ import (
 	"scullion/ctx"
 	"scullion/log"
 	"time"
-
-	"github.com/lxc/lxd/shared/logger"
 )
 
 func NewDatetimeRegistrar() Registrar {
@@ -37,17 +35,17 @@ type datetime struct {
 	logger log.Logger
 }
 
-func (datetime) Date(s string) time.Time {
+func (dt datetime) Date(s string) time.Time {
 	t, err := time.Parse(time.RFC3339, s)
 	if err != nil {
-		logger.Errorf("date parse: %v", err)
+		dt.logger.Errorf("date parse: %v", err)
 	}
 	return t
 }
-func (datetime) Duration(s string) time.Duration {
+func (dt datetime) Duration(s string) time.Duration {
 	d, err := time.ParseDuration(s)
 	if err != nil {
-		logger.Errorf("duration parse: %v", err)
+		dt.logger.Errorf("duration parse: %v", err)
 	}
 	return d
 }
@@ -64,4 +62,4 @@ func (datetime) BeforeDuration(a, b time.Duration) bool        { return a < b }
 func (datetime) BeforeOrEqualDuration(a, b time.Duration) bool { return a <= b }
 func (datetime) AfterDuration(a, b time.Duration) bool         { return a > b }
 func (datetime) AfterOrEqualDuration(a, b time.Duration) bool  { return a >= b }
-func (d datetime) Since(s string) time.Duration                { return time.Since(d.Date(s)) }
+func (dt datetime) Since(s string) time.Duration               { return time.Since(dt.Date(s)) }

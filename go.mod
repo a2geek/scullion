@@ -3,13 +3,14 @@ module scullion
 go 1.14
 
 require (
-	github.com/antonmedv/expr v1.8.2
-	github.com/cloudfoundry-community/go-cfclient v0.0.0-20190808214049-35bcce23fc5f
-	github.com/golang/protobuf v1.3.2 // indirect
+	github.com/Masterminds/semver v1.5.0 // indirect
+	github.com/antonmedv/expr v1.8.8
+	github.com/cloudfoundry-community/go-cfclient v0.0.0-20200413172050-18981bf12b4b
+	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/jessevdk/go-flags v1.4.1-0.20181221193153-c0795c8afcf4
-	github.com/lxc/lxd v0.0.0-20200411180253-b2cc12460924
-	golang.org/x/net v0.0.0-20190503192946-f4e77d36d62c // indirect
-	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45 // indirect
-	google.golang.org/appengine v1.5.0 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
+	golang.org/x/net v0.0.0-20200520182314-0ba52f642ac2 // indirect
+	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d // indirect
+	google.golang.org/appengine v1.6.6 // indirect
 	gopkg.in/yaml.v2 v2.3.0
 )
