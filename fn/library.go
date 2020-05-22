@@ -1,13 +1,22 @@
 package fn
 
 import (
+	"fmt"
+	"scullion/config"
 	"scullion/ctx"
-
-	"github.com/lxc/lxd/shared/logger"
 )
 
-func NewLibraryRegistrar(library map[string]ctx.Subprogram) Registrar {
+func NewLibraryRegistrar(libraryDefs []config.LibraryDef) Registrar {
 	return func(state *ctx.State) {
+		library := make(map[string]ctx.Subprogram)
+		for _, libraryDef := range libraryDefs {
+			pgm, err := ctx.NewSubprogram(libraryDef.Name, libraryDef.Pipeline, libraryDef.Actions, state.LoggerWrapper())
+			if err != nil {
+				state.Errorf("Error with subprogram '%s': %v", libraryDef.Name, err)
+			}
+			library[libraryDef.Name] = pgm
+		}
+
 		lib := Library{
 			state:   state,
 			library: library,
@@ -21,12 +30,12 @@ type Library struct {
 	library map[string]ctx.Subprogram
 }
 
-func (l *Library) Call(name string) {
+func (l *Library) Call(name string) error {
 	p, ok := l.library[name]
 	if !ok {
-		logger.Errorf("unable to locate subprogram '%s' in library", name)
-		return
+		return fmt.Errorf("unable to locate subprogram '%s' in library", name)
 	}
 	newPgm := p.Dup()
 	l.state.EmitSub(newPgm)
+	return nil
 }

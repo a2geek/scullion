@@ -5,7 +5,6 @@ import (
 
 	"github.com/antonmedv/expr"
 	"github.com/antonmedv/expr/vm"
-	"github.com/lxc/lxd/shared/logger"
 )
 
 // State stores the current execution context for this rule
@@ -64,9 +63,39 @@ func (ctx *State) Execute() {
 		// In the Pipeline, each step determines if the pipeline continues via calling Emit
 		pgm := sub.Pipeline[0]
 		sub.Pipeline = sub.Pipeline[1:]
-		_, err := expr.Run(pgm, expr.Env(ctx.vars))
+		x, err := expr.Compile(pgm.Source.Content(),
+			expr.Env(ctx.vars),
+
+			// Operators override for date comprising.
+			expr.Operator("==", "Equal"),
+			expr.Operator("<", "Before"),
+			expr.Operator("<=", "BeforeOrEqual"),
+			expr.Operator(">", "After"),
+			expr.Operator(">=", "AfterOrEqual"),
+
+			// Time and duration manipulation.
+			expr.Operator("+", "Add"),
+			expr.Operator("-", "Sub"),
+
+			// Operators override for duration comprising.
+			expr.Operator("==", "EqualDuration"),
+			expr.Operator("<", "BeforeDuration"),
+			expr.Operator("<=", "BeforeOrEqualDuration"),
+			expr.Operator(">", "AfterDuration"),
+			expr.Operator(">=", "AfterOrEqualDuration"),
+		)
 		if err != nil {
-			logger.Errorf("%v", err)
+			ctx.Errorf("compile: %v", err)
+			return
+		}
+
+		out, err := expr.Run(x, ctx.vars)
+		if err != nil {
+			ctx.Errorf("run: %v", err)
+			return
+		}
+		if e, ok := out.(error); ok && e != nil {
+			ctx.Errorf("run: %v", e)
 			return
 		}
 	}
@@ -91,14 +120,14 @@ func (ctx *State) ReEmit() {
 }
 
 func (s *State) LoggerWrapper() log.Logger              { return s }
-func (s *State) Debug(v ...interface{})                 { s.activeLogger().Debug(v) }
-func (s *State) Debugf(format string, v ...interface{}) { s.activeLogger().Debugf(format, v) }
-func (s *State) Info(v ...interface{})                  { s.activeLogger().Info(v) }
-func (s *State) Infof(format string, v ...interface{})  { s.activeLogger().Infof(format, v) }
-func (s *State) Warn(v ...interface{})                  { s.activeLogger().Warn(v) }
-func (s *State) Warnf(format string, v ...interface{})  { s.activeLogger().Warnf(format, v) }
-func (s *State) Error(v ...interface{})                 { s.activeLogger().Error(v) }
-func (s *State) Errorf(format string, v ...interface{}) { s.activeLogger().Errorf(format, v) }
+func (s *State) Debug(v ...interface{})                 { s.activeLogger().Debug(v...) }
+func (s *State) Debugf(format string, v ...interface{}) { s.activeLogger().Debugf(format, v...) }
+func (s *State) Info(v ...interface{})                  { s.activeLogger().Info(v...) }
+func (s *State) Infof(format string, v ...interface{})  { s.activeLogger().Infof(format, v...) }
+func (s *State) Warn(v ...interface{})                  { s.activeLogger().Warn(v...) }
+func (s *State) Warnf(format string, v ...interface{})  { s.activeLogger().Warnf(format, v...) }
+func (s *State) Error(v ...interface{})                 { s.activeLogger().Error(v...) }
+func (s *State) Errorf(format string, v ...interface{}) { s.activeLogger().Errorf(format, v...) }
 
 func (s *State) activeLogger() log.Logger {
 	return s.activeSubprogram().Logger
@@ -107,10 +136,3 @@ func (s *State) activeLogger() log.Logger {
 func (s *State) activeSubprogram() Subprogram {
 	return s.code[len(s.code)-1]
 }
-
-// func setupEnv(sourceVars map[string]interface{}) expr.Option {
-// 	vars := make(map[string]interface{})
-// 	for k, v := range sourceVars {
-// 		vars[k] = v
-// 	}
-// }

@@ -21,14 +21,14 @@ func NewSubprogram(name string, pipeline, actions []string, logger log.Logger) (
 		Logger: logger,
 	}
 	for i, code := range pipeline {
-		pgm, err := compile(code)
+		pgm, err := expr.Compile(code, expr.AllowUndefinedVariables())
 		if err != nil {
 			return sub, fmt.Errorf("entry #%d: %w", i, err)
 		}
 		sub.Pipeline = append(sub.Pipeline, pgm)
 	}
 	for i, code := range actions {
-		pgm, err := compile(code)
+		pgm, err := expr.Compile(code, expr.AllowUndefinedVariables())
 		if err != nil {
 			return sub, fmt.Errorf("entry #%d: %w", i, err)
 		}
@@ -48,34 +48,4 @@ func (sub *Subprogram) Dup() Subprogram {
 		Actions:  newA,
 		Logger:   sub.Logger,
 	}
-}
-
-func compile(code string) (*vm.Program, error) {
-	options := []expr.Option{
-		//		expr.Env(vars),
-
-		// Operators override for date comprising.
-		expr.Operator("==", "Equal"),
-		expr.Operator("<", "Before"),
-		expr.Operator("<=", "BeforeOrEqual"),
-		expr.Operator(">", "After"),
-		expr.Operator(">=", "AfterOrEqual"),
-
-		// Time and duration manipulation.
-		expr.Operator("+", "Add"),
-		expr.Operator("-", "Sub"),
-
-		// Operators override for duration comprising.
-		expr.Operator("==", "EqualDuration"),
-		expr.Operator("<", "BeforeDuration"),
-		expr.Operator("<=", "BeforeOrEqualDuration"),
-		expr.Operator(">", "AfterDuration"),
-		expr.Operator(">=", "AfterOrEqualDuration"),
-	}
-
-	pgm, err := expr.Compile(code, options...)
-	if err != nil {
-		return nil, err
-	}
-	return pgm, nil
 }

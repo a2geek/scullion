@@ -7,6 +7,7 @@ import (
 	"scullion/option"
 	"scullion/worker"
 	"sync"
+	"time"
 )
 
 type OneTime struct {
@@ -30,7 +31,7 @@ func (cmd *OneTime) Execute(args []string) error {
 		fn.NewCfCurlRegistrar(client),
 		fn.NewDatetimeRegistrar(),
 		fn.NewFiltererRegistrar(),
-		// fn.NewLibraryRegistrar(lib),
+		fn.NewLibraryRegistrar(cfg.Library),
 		fn.NewTemplateRegistrar(cfg.Templates),
 	}
 
@@ -51,6 +52,7 @@ func (cmd *OneTime) Execute(args []string) error {
 
 	// Cannot use Task directly as it has the timer embedded
 	for _, ruleDef := range cfg.Rules {
+		logger.Debugf("starting rule '%s'", ruleDef.Name)
 		logrule, err := log.NewLogger(ruleDef.Name, cmd.Level, cmd.NoDate)
 		if err != nil {
 			panic(err)
@@ -66,7 +68,10 @@ func (cmd *OneTime) Execute(args []string) error {
 			registerFuncs(state)
 		}
 		stateChan <- state
+		logger.Debugf("completing rule '%s'", ruleDef.Name)
 	}
+
+	time.Sleep(10 * time.Second)
 
 	// Begin cascade of shutting down...
 	close(stateChan)

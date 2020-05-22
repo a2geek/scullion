@@ -36,7 +36,7 @@ func (cmd *Run) Execute(args []string) error {
 		fn.NewCfCurlRegistrar(client),
 		fn.NewDatetimeRegistrar(),
 		fn.NewFiltererRegistrar(),
-		// fn.NewLibraryRegistrar(lib),
+		fn.NewLibraryRegistrar(cfg.Library),
 		fn.NewTemplateRegistrar(cfg.Templates),
 	}
 
