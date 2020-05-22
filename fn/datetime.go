@@ -25,6 +25,7 @@ func NewDatetimeRegistrar() Registrar {
 		state.AddFunc("Date", dt.Date)
 		state.AddFunc("Duration", dt.Duration)
 		state.AddFunc("Equal", dt.Equal)
+		state.AddFunc("EqualDuration", dt.EqualDuration)
 		state.AddFunc("Now", dt.Now)
 		state.AddFunc("Since", dt.Since)
 		state.AddFunc("Sub", dt.Sub)
