@@ -4,7 +4,6 @@ import (
 	"scullion/log"
 
 	"github.com/antonmedv/expr"
-	"github.com/antonmedv/expr/vm"
 )
 
 // State stores the current execution context for this rule
@@ -50,7 +49,7 @@ func (ctx *State) Execute() {
 		sub.Actions = nil
 		for _, action := range actions {
 			nextCtx := ctx.Dup()
-			nextCtx.code[len(nextCtx.code)-1].Pipeline = []*vm.Program{action}
+			nextCtx.code[len(nextCtx.code)-1].Pipeline = []string{action}
 			ctx.ch <- nextCtx
 		}
 		// If there are prior Pipelines to run, kick it off
@@ -61,9 +60,9 @@ func (ctx *State) Execute() {
 		}
 	} else {
 		// In the Pipeline, each step determines if the pipeline continues via calling Emit
-		pgm := sub.Pipeline[0]
+		code := sub.Pipeline[0]
 		sub.Pipeline = sub.Pipeline[1:]
-		x, err := expr.Compile(pgm.Source.Content(),
+		pgm, err := expr.Compile(code,
 			expr.Env(ctx.vars),
 
 			// Operators override for date comprising.
@@ -89,12 +88,13 @@ func (ctx *State) Execute() {
 			return
 		}
 
-		out, err := expr.Run(x, ctx.vars)
+		result, err := expr.Run(pgm, ctx.vars)
 		if err != nil {
 			ctx.Errorf("run: %v", err)
 			return
 		}
-		if e, ok := out.(error); ok && e != nil {
+		// FIXME: Do we need also fail if the result is NOT an error type? It may suggest a development error.
+		if e, ok := result.(error); ok && e != nil {
 			ctx.Errorf("run: %v", e)
 			return
 		}
