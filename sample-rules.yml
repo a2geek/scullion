@@ -51,21 +51,21 @@ rules:
   schedule:
     frequency: 1h
   pipeline:
-  - Use('apps-to-consider')
+  - Call('apps-to-consider')
   - Filter(app.state == 'STARTED' && Since(app.updated_at) > Duration('1h'))
   actions:
-  - Use('stop-app')
+  - Call('stop-app')
 
 - name: delete stopped non-prod apps
   schedule:
     frequency: 3h
   pipeline:
-  - Use('apps-to-consider')
+  - Call('apps-to-consider')
   - Filter(app.state == 'STOPPED' && Since(app.updated_at) > Duration('36h'))
   actions:
-  - Use('stop-app')
-  - Use('unbind-app-services')
-  - Use('delete-app')
+  - Call('stop-app')
+  - Call('unbind-app-services')
+  - Call('delete-app')
 
 - name: delete unbound routes
   schedule:
