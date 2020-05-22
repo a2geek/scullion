@@ -15,8 +15,9 @@ type Filterer struct {
 	state *ctx.State
 }
 
-func (f *Filterer) Filter(flag bool) {
+func (f *Filterer) Filter(flag bool) error {
 	if flag {
 		f.state.ReEmit()
 	}
+	return nil
 }

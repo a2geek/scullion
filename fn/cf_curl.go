@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/cloudfoundry-community/go-cfclient"
-	"github.com/lxc/lxd/shared/logger"
 )
 
 func NewCfCurlRegistrar(client *cfclient.Client) Registrar {
@@ -33,35 +32,36 @@ type CfCurl struct {
 // Get performs a single HTTP GET against the CF API.
 // The entire JSON response is added as 'name' emitted into the
 // channel for processing.
-func (cf *CfCurl) Get(path, name string) {
+func (cf *CfCurl) Get(path, name string) error {
+	cf.state.Debugf("%s <- GET %s", name, path)
 	doc, err := cf.makeRequest("GET", path)
 	if err != nil {
-		logger.Errorf("%v", err)
-		return
+		return err
 	}
 
 	cf.state.EmitVar(map[string]interface{}{
 		name: doc,
 	})
+
+	return nil
 }
 
 // Get performs a multi-valued HTTP GET against the CF API inclusive of paging.
 // For every item in 'resources[...]' a value of 'name' will be emitted into the
 // channel for further processing.
-func (cf *CfCurl) GetResources(path, name string) {
+func (cf *CfCurl) GetResources(path, name string) error {
+	cf.state.Debugf("%s <- GetResources %s", name, path)
 	if path != "" {
 		doc, err := cf.makeRequest("GET", path)
 
 		rss, ok := doc["resources"]
 		if !ok {
-			logger.Errorf("GET %s does not contain 'resources'", path)
-			return
+			return fmt.Errorf("GET %s does not contain 'resources'", path)
 		}
 
 		ary, ok := rss.([]interface{})
 		if !ok {
-			logger.Errorf("GET %s 'resources' is not an array", path)
-			return
+			return fmt.Errorf("GET %s 'resources' is not an array", path)
 		}
 
 		for item := range ary {
@@ -71,40 +71,33 @@ func (cf *CfCurl) GetResources(path, name string) {
 		}
 
 		path, err = cf.nextPage(doc)
-		if err != nil {
-			logger.Error(path)
-		}
+		return err
 	}
+	return nil
 }
 
 // Post performs a single HTTP POST against the CF API.
-func (cf *CfCurl) Post(path, body string) {
+func (cf *CfCurl) Post(path, body string) error {
+	cf.state.Debugf("POST %s", path)
 	// Note we toss the doc away for now...
 	_, err := cf.makeRequestWithBody("POST", path, body)
-	if err != nil {
-		logger.Errorf("%v", err)
-		return
-	}
+	return err
 }
 
 // Put performs a single HTTP PUT against the CF API.
-func (cf *CfCurl) Put(path, body string) {
+func (cf *CfCurl) Put(path, body string) error {
+	cf.state.Debugf("PUT %s", path)
 	// Note we toss the doc away for now...
 	_, err := cf.makeRequestWithBody("PUT", path, body)
-	if err != nil {
-		logger.Errorf("%v", err)
-		return
-	}
+	return err
 }
 
 // Delete performs a single HTTP DELETE against the CF API.
-func (cf *CfCurl) Delete(path string) {
+func (cf *CfCurl) Delete(path string) error {
+	cf.state.Debugf("DELETE %s", path)
 	// Note we toss the doc away for now...
 	_, err := cf.makeRequest("DELETE", path)
-	if err != nil {
-		logger.Errorf("%v", err)
-		return
-	}
+	return err
 }
 
 func (cf *CfCurl) makeRequest(method, path string) (map[string]interface{}, error) {
