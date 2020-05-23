@@ -1,27 +1,22 @@
 ---
 library:
 - name: apps-to-consider
-  # alt_pipeline:
-  # - GET('/v2/organizations') -> 'org'
-  # - Filter(org.entity.name != 'system')
-  # - GET(org.entity.spaces_url) -> 'space'
-  # - Filter(space.entity.name != 'prod')
-  # - GET(space.entity.apps_url) -> 'app'
   pipeline:
-  - GET('/v2/organizations', 'org')
+  - GetResources('/v2/organizations', 'org')
   - Filter(org.entity.name != 'system')
-  - GET(org.entity.spaces_url, 'space')
+  - GetResources(org.entity.spaces_url, 'space')
   - Filter(space.entity.name != 'prod')
-  - GET(space.entity.apps_url, 'app')
+  - GetResources(space.entity.apps_url, 'app')
 - name: stop-app
   pipeline:
   - PUT(app.metadata.url, Template('StopApp'))
 - name: unbind-app-services
   pipeline:
-  - GET(app.entity.service_bindings_url, 'service_binding')
+  - GetResources(app.entity.service_bindings_url, 'service_binding')
+  action:
   - DELETE(service_binding.metadata.url)
 - name: delete-app
-  pipeline:
+  action:
   - DELETE(app.metadata.url)
 
 templates:
@@ -56,25 +51,25 @@ rules:
   actions:
   - Call('stop-app')
 
-- name: delete stopped non-prod apps
-  schedule:
-    frequency: 3h
-  pipeline:
-  - Call('apps-to-consider')
-  - Filter(app.state == 'STOPPED' && Since(app.updated_at) > Duration('36h'))
-  actions:
-  - Call('stop-app')
-  - Call('unbind-app-services')
-  - Call('delete-app')
+# - name: delete stopped non-prod apps
+#   schedule:
+#     frequency: 3h
+#   pipeline:
+#   - Call('apps-to-consider')
+#   - Filter(app.state == 'STOPPED' && Since(app.updated_at) > Duration('36h'))
+#   actions:
+#   - Call('stop-app')
+#   - Call('unbind-app-services')
+#   - Call('delete-app')
 
-- name: delete unbound routes
-  schedule:
-    frequency: 3h
-  pipeline:
-  - GET('/v3/routes', 'route')
-  - Filter(len(route.destinations) == 0)
-  actions:
-  - DELETE(route.links.self)
+# - name: delete unbound routes
+#   schedule:
+#     frequency: 3h
+#   pipeline:
+#   - GetResources('/v3/routes', 'route')
+#   - Filter(len(route.destinations) == 0)
+#   actions:
+#   - DELETE(route.links.self)
 
 # V3 -- but V3 does not have a mechanism to query based on an event guid or timestamp
 # - name: what would events look like (V3)
