@@ -68,7 +68,7 @@ func (cmd *OneTime) Execute(args []string) error {
 			registerFuncs(state)
 		}
 		stateChan <- state
-		logger.Debugf("completing rule '%s'", ruleDef.Name)
+		logger.Debugf("started rule '%s'", ruleDef.Name)
 	}
 
 	time.Sleep(10 * time.Second)
