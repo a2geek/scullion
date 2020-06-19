@@ -3,12 +3,19 @@ library:
 - name: apps-to-consider
   pipeline:
   - GetResources('/v2/organizations', 'org')
+  - Debug('Found org ', org.entity.name)
   - Filter(org.entity.name != 'system')
+  - Debug('Selected org ', org.entity.name)
   - GetResources(org.entity.spaces_url, 'space')
+  - Debug('Found space ', space.entity.name)
   - Filter(space.entity.name != 'prod')
+  - Debug('Selected space ', space.entity.name)
   - GetResources(space.entity.apps_url, 'app')
+  - Debug('Found app ', app.entity.name)
 - name: stop-app
   pipeline:
+  - Debug('Stopping app ', app.entity.name)
+  action:
   - PUT(app.metadata.url, Template('StopApp'))
 - name: unbind-app-services
   pipeline:
@@ -48,6 +55,7 @@ rules:
   pipeline:
   - Call('apps-to-consider')
   - Filter(app.state == 'STARTED' && Since(app.updated_at) > Duration('1h'))
+  - Debug('Selected app ', app.entity.name)
   actions:
   - Call('stop-app')
 
