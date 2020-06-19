@@ -6,6 +6,13 @@
 
 Cleans up after your Cloud Foundry development activities, so you don't have to.
 
+## Processing hypothesis/overview
+
+* Cloud Foundry makes deploying applications really easy.
+* Developers don't like to clean up after themselves and CF tends to get cluttered.
+* Go has interesting concurrency capabilities with goroutines and channels.
+* By defining processing stages that emit results to the next stage dynamic rules can be defined.
+
 ## TODO
 
 Beyond what is noted elsewhere, additional items:
@@ -45,9 +52,25 @@ For each rule, it consists of a number of components.
 * A pipeline for data flow. This is the main set of processing. Each step _must_ emit results for processing to continue. This both enables multi-result capability and filtering.
 * Actions. All actions are acted upon once a pipeline completes.
 
+Yaml structure:
+
+```
+rules:
+- name: the name used in logging goes here
+  schedule:
+    frequency: 1h   # See Go's ParseDuration for formats (`s`, `m`, `h` are the most useful)
+  pipeline:         # Any failure stops the pipeline
+  - # First stage
+  - # Second stage
+  - # Etc...
+  actions:          # All actions are executed independently and likely concurrently
+  - # Action 1
+  - # Action 2
+```
+
 #### Pipelines
 
-A pipeline originates all data and processes all data. It can be structured as needed.
+A pipeline originates all data and processes all data. It can be structured as needed. The base language is from [Expr](https://github.com/antonmedv/expr) with additional capabilities added to extend the language.
 
 The following capabilities are exposed:
 * Cloud Foundry API:
@@ -55,6 +78,23 @@ The following capabilities are exposed:
   * `GetResources(path, name)`: Pages through a resource that contains a `resources` array. Each item in the `resources` array is emitted independently for the next step.
   * `POST(path, body)`: POST `body` to the given API endpoint.
   * `PUT(path, body)`: PUT `body` to the given API endpoint.
+* Dates: (based on [`dates_test.go`](https://github.com/antonmedv/expr/blob/master/docs/examples/dates_test.go))
+  * `Add(date.Time, date.Duration) date.Time` also mapped to `+`.
+  * `After(date.Time, date.Time) bool` also mapped to `>`.
+  * `AfterDuration(a, b time.Duration) bool` also mapped to `>`.
+  * `AfterOrEqual(a, b time.Time) bool` also mapped to `>=`.
+  * `AfterOrEqualDuration(a, b time.Duration) bool` also mapped to `>=`.
+  * `Before(a, b time.Time) bool` also mapped to `<`.
+  * `BeforeDuration(a, b time.Duration) bool` also mapped to `<`.
+  * `BeforeOrEqual(a, b time.Time) bool` also mapped to `<=`.
+  * `BeforeOrEqualDuration(a, b time.Duration) bool` also mapped to `<=`.
+  * `Date(s string) time.Time` can be used to create a date based on a typical Cloud Foundry date format.
+  * `Duration(s string) time.Duration` can be used to parse a duration (see Go [`ParseDuration`](https://golang.org/pkg/time/#ParseDuration) for formats supported).
+  * `Equal(a, b time.Time) bool` also mapped to `=`.
+  * `EqualDuration(a, b time.Duration) bool` also mapped to `=`.
+  * `Now() time.Time` returns the current time.
+  * `Since(s string) time.Duration` uses `Date` to parse the string and return `Duration` of that has passed.
+  * `Sub(a, b time.Time) time.Duration` also mapped to `-`.
 * Filters:
   * `Filter(expression)`: If true, emit current state. If false, processing stops.
 * Libraries:
@@ -64,11 +104,50 @@ The following capabilities are exposed:
 
 ### the Library
 
-TBD
+The library is reusable code. As an idea, the library could define common tasks (stop application or identify applications to process) or just give a name to a specific set of code. Use the `Call('library-name')` method to use it.  `Call` can be used both in the pipeline and in the library.
+
+Yaml structure:
+
+```
+library:
+- name: apps-to-consider
+  pipeline:
+  - # First stage
+  - # Second stage
+- name: stop-app
+  pipeline:
+  - # Etc...
+```
 
 ### Templates
 
-TBD
+Templates are useful to extract strings, particularly large ones or strings that are easier to manage when formatted (like JSON structures). See the _Templates_ function reference for lookup capabilities.
+
+Sample:
+
+```
+templates:
+  StopApp: >
+    {
+      "state": "STOPPED"
+    }
+  SpaceDeveloper: >
+    {
+      "type": "space_developer", 
+      "relationships": { 
+        "user": {
+          "data": {
+            "guid": "%s"
+          }
+        },
+        "space": {
+          "data": {
+            "guid": "%s"
+          }
+        }
+      }
+    }
+```
 
 ### Putting it all together
 
