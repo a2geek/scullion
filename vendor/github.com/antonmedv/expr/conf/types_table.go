@@ -1,10 +1,15 @@
 package conf
 
-import "reflect"
+import (
+	"reflect"
+)
 
 type Tag struct {
-	Type   reflect.Type
-	Method bool
+	Type        reflect.Type
+	Ambiguous   bool
+	FieldIndex  []int
+	Method      bool
+	MethodIndex int
 }
 
 type TypesTable map[string]Tag
@@ -15,7 +20,7 @@ type TypesTable map[string]Tag
 //
 // If map is passed, all items will be treated as variables
 // (key as name, value as type).
-func CreateTypesTable(i interface{}) TypesTable {
+func CreateTypesTable(i any) TypesTable {
 	if i == nil {
 		return nil
 	}
@@ -38,13 +43,20 @@ func CreateTypesTable(i interface{}) TypesTable {
 		// all embedded structs methods as well, no need to recursion.
 		for i := 0; i < t.NumMethod(); i++ {
 			m := t.Method(i)
-			types[m.Name] = Tag{Type: m.Type, Method: true}
+			types[m.Name] = Tag{
+				Type:        m.Type,
+				Method:      true,
+				MethodIndex: i,
+			}
 		}
 
 	case reflect.Map:
 		for _, key := range v.MapKeys() {
 			value := v.MapIndex(key)
 			if key.Kind() == reflect.String && value.IsValid() && value.CanInterface() {
+				if key.String() == "$env" { // Could check for all keywords here
+					panic("attempt to misuse env keyword as env map key")
+				}
 				types[key.String()] = Tag{Type: reflect.TypeOf(value.Interface())}
 			}
 		}
@@ -52,7 +64,11 @@ func CreateTypesTable(i interface{}) TypesTable {
 		// A map may have method too.
 		for i := 0; i < t.NumMethod(); i++ {
 			m := t.Method(i)
-			types[m.Name] = Tag{Type: m.Type, Method: true}
+			types[m.Name] = Tag{
+				Type:        m.Type,
+				Method:      true,
+				MethodIndex: i,
+			}
 		}
 	}
 
@@ -73,11 +89,22 @@ func FieldsFromStruct(t reflect.Type) TypesTable {
 
 			if f.Anonymous {
 				for name, typ := range FieldsFromStruct(f.Type) {
-					types[name] = typ
+					if _, ok := types[name]; ok {
+						types[name] = Tag{Ambiguous: true}
+					} else {
+						typ.FieldIndex = append(f.Index, typ.FieldIndex...)
+						types[name] = typ
+					}
 				}
 			}
-
-			types[f.Name] = Tag{Type: f.Type}
+			if fn := FieldName(f); fn == "$env" { // Could check for all keywords here
+				panic("attempt to misuse env keyword as env struct field tag")
+			} else {
+				types[FieldName(f)] = Tag{
+					Type:       f.Type,
+					FieldIndex: f.Index,
+				}
+			}
 		}
 	}
 
@@ -92,4 +119,18 @@ func dereference(t reflect.Type) reflect.Type {
 		t = dereference(t.Elem())
 	}
 	return t
+}
+
+func kind(t reflect.Type) reflect.Kind {
+	if t == nil {
+		return reflect.Invalid
+	}
+	return t.Kind()
+}
+
+func FieldName(field reflect.StructField) string {
+	if taggedName := field.Tag.Get("expr"); taggedName != "" {
+		return taggedName
+	}
+	return field.Name
 }

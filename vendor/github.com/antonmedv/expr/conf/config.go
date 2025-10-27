@@ -5,27 +5,54 @@ import (
 	"reflect"
 
 	"github.com/antonmedv/expr/ast"
-	"github.com/antonmedv/expr/vm"
+	"github.com/antonmedv/expr/builtin"
+	"github.com/antonmedv/expr/vm/runtime"
 )
 
 type Config struct {
-	Env          interface{}
-	MapEnv       bool
-	Types        TypesTable
-	Operators    OperatorsTable
-	Expect       reflect.Kind
-	Optimize     bool
-	Strict       bool
-	DefaultType  reflect.Type
-	ConstExprFns map[string]reflect.Value
-	Visitors     []ast.Visitor
-	err          error
+	Env         any
+	Types       TypesTable
+	MapEnv      bool
+	DefaultType reflect.Type
+	Operators   OperatorsTable
+	Expect      reflect.Kind
+	ExpectAny   bool
+	Optimize    bool
+	Strict      bool
+	ConstFns    map[string]reflect.Value
+	Visitors    []ast.Visitor
+	Functions   map[string]*ast.Function
+	Builtins    map[string]*ast.Function
+	Disabled    map[string]bool // disabled builtins
 }
 
-func New(env interface{}) *Config {
+// CreateNew creates new config with default values.
+func CreateNew() *Config {
+	c := &Config{
+		Optimize:  true,
+		Operators: make(map[string][]string),
+		ConstFns:  make(map[string]reflect.Value),
+		Functions: make(map[string]*ast.Function),
+		Builtins:  make(map[string]*ast.Function),
+		Disabled:  make(map[string]bool),
+	}
+	for _, f := range builtin.Builtins {
+		c.Builtins[f.Name] = f
+	}
+	return c
+}
+
+// New creates new config with environment.
+func New(env any) *Config {
+	c := CreateNew()
+	c.WithEnv(env)
+	return c
+}
+
+func (c *Config) WithEnv(env any) {
 	var mapEnv bool
 	var mapValueType reflect.Type
-	if _, ok := env.(map[string]interface{}); ok {
+	if _, ok := env.(map[string]any); ok {
 		mapEnv = true
 	} else {
 		if reflect.ValueOf(env).Kind() == reflect.Map {
@@ -33,57 +60,58 @@ func New(env interface{}) *Config {
 		}
 	}
 
-	return &Config{
-		Env:          env,
-		MapEnv:       mapEnv,
-		Types:        CreateTypesTable(env),
-		Optimize:     true,
-		Strict:       true,
-		DefaultType:  mapValueType,
-		ConstExprFns: make(map[string]reflect.Value),
-	}
+	c.Env = env
+	c.Types = CreateTypesTable(env)
+	c.MapEnv = mapEnv
+	c.DefaultType = mapValueType
+	c.Strict = true
 }
 
-// Check validates the compiler configuration.
-func (c *Config) Check() error {
-	// Check that all functions that define operator overloading
-	// exist in environment and have correct signatures.
-	for op, fns := range c.Operators {
+func (c *Config) Operator(operator string, fns ...string) {
+	c.Operators[operator] = append(c.Operators[operator], fns...)
+}
+
+func (c *Config) ConstExpr(name string) {
+	if c.Env == nil {
+		panic("no environment is specified for ConstExpr()")
+	}
+	fn := reflect.ValueOf(runtime.Fetch(c.Env, name))
+	if fn.Kind() != reflect.Func {
+		panic(fmt.Errorf("const expression %q must be a function", name))
+	}
+	c.ConstFns[name] = fn
+}
+
+func (c *Config) Check() {
+	for operator, fns := range c.Operators {
 		for _, fn := range fns {
 			fnType, ok := c.Types[fn]
 			if !ok || fnType.Type.Kind() != reflect.Func {
-				return fmt.Errorf("function %s for %s operator does not exist in environment", fn, op)
+				panic(fmt.Errorf("function %s for %s operator does not exist in the environment", fn, operator))
 			}
 			requiredNumIn := 2
 			if fnType.Method {
 				requiredNumIn = 3 // As first argument of method is receiver.
 			}
 			if fnType.Type.NumIn() != requiredNumIn || fnType.Type.NumOut() != 1 {
-				return fmt.Errorf("function %s for %s operator does not have a correct signature", fn, op)
+				panic(fmt.Errorf("function %s for %s operator does not have a correct signature", fn, operator))
 			}
 		}
 	}
-
-	// Check that all ConstExprFns are functions.
-	for name, fn := range c.ConstExprFns {
-		if fn.Kind() != reflect.Func {
-			return fmt.Errorf("const expression %q must be a function", name)
+	for fnName, t := range c.Types {
+		if kind(t.Type) == reflect.Func {
+			for _, b := range c.Builtins {
+				if b.Name == fnName {
+					panic(fmt.Errorf(`cannot override builtin %s(): use expr.DisableBuiltin("%s") to override`, b.Name, b.Name))
+				}
+			}
 		}
 	}
-
-	return c.err
-}
-
-func (c *Config) ConstExpr(name string) {
-	if c.Env == nil {
-		c.Error(fmt.Errorf("no environment for const expression: %v", name))
-		return
-	}
-	c.ConstExprFns[name] = vm.FetchFn(c.Env, name)
-}
-
-func (c *Config) Error(err error) {
-	if c.err == nil {
-		c.err = err
+	for _, f := range c.Functions {
+		for _, b := range c.Builtins {
+			if b.Name == f.Name {
+				panic(fmt.Errorf(`cannot override builtin %s(); use expr.DisableBuiltin("%s") to override`, f.Name, f.Name))
+			}
+		}
 	}
 }

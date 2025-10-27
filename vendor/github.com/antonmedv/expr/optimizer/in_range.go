@@ -1,19 +1,27 @@
 package optimizer
 
 import (
+	"reflect"
+
 	. "github.com/antonmedv/expr/ast"
 )
 
 type inRange struct{}
 
-func (*inRange) Enter(*Node) {}
-func (*inRange) Exit(node *Node) {
+func (*inRange) Visit(node *Node) {
 	switch n := (*node).(type) {
 	case *BinaryNode:
-		if n.Operator == "in" || n.Operator == "not in" {
-			if rng, ok := n.Right.(*BinaryNode); ok && rng.Operator == ".." {
-				if from, ok := rng.Left.(*IntegerNode); ok {
-					if to, ok := rng.Right.(*IntegerNode); ok {
+		if n.Operator == "in" {
+			t := n.Left.Type()
+			if t == nil {
+				return
+			}
+			if t.Kind() != reflect.Int {
+				return
+			}
+			if rangeOp, ok := n.Right.(*BinaryNode); ok && rangeOp.Operator == ".." {
+				if from, ok := rangeOp.Left.(*IntegerNode); ok {
+					if to, ok := rangeOp.Right.(*IntegerNode); ok {
 						Patch(node, &BinaryNode{
 							Operator: "and",
 							Left: &BinaryNode{
@@ -27,12 +35,6 @@ func (*inRange) Exit(node *Node) {
 								Right:    to,
 							},
 						})
-						if n.Operator == "not in" {
-							Patch(node, &UnaryNode{
-								Operator: "not",
-								Node:     *node,
-							})
-						}
 					}
 				}
 			}

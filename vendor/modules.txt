@@ -1,13 +1,11 @@
-# code.cloudfoundry.org/gofileutils v0.0.0-20170111115228-4d0c80011a0f
-## explicit
-code.cloudfoundry.org/gofileutils/fileutils
-# github.com/Masterminds/semver v1.4.2
+# github.com/Masterminds/semver v1.5.0
 ## explicit
 github.com/Masterminds/semver
-# github.com/antonmedv/expr v1.8.2
-## explicit; go 1.13
+# github.com/antonmedv/expr v1.15.5
+## explicit; go 1.18
 github.com/antonmedv/expr
 github.com/antonmedv/expr/ast
+github.com/antonmedv/expr/builtin
 github.com/antonmedv/expr/checker
 github.com/antonmedv/expr/compiler
 github.com/antonmedv/expr/conf
@@ -15,24 +13,33 @@ github.com/antonmedv/expr/file
 github.com/antonmedv/expr/optimizer
 github.com/antonmedv/expr/parser
 github.com/antonmedv/expr/parser/lexer
+github.com/antonmedv/expr/parser/operator
+github.com/antonmedv/expr/parser/utils
 github.com/antonmedv/expr/vm
-# github.com/cloudfoundry-community/go-cfclient v0.0.0-20190808214049-35bcce23fc5f
-## explicit
+github.com/antonmedv/expr/vm/runtime
+# github.com/cloudfoundry-community/go-cfclient v0.0.0-20220930021109-9c4e6c59ccf1
+## explicit; go 1.15
 github.com/cloudfoundry-community/go-cfclient
-# github.com/jessevdk/go-flags v1.4.1-0.20181221193153-c0795c8afcf4
-## explicit
+# github.com/jessevdk/go-flags v1.6.1
+## explicit; go 1.20
 github.com/jessevdk/go-flags
 # github.com/lxc/lxd v0.0.0-20200411180253-b2cc12460924
 ## explicit
 github.com/lxc/lxd/shared/logger
-# github.com/pkg/errors v0.8.1
+# github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
-# golang.org/x/net v0.0.0-20190503192946-f4e77d36d62c
-## explicit
+# golang.org/x/net v0.46.0
+## explicit; go 1.24.0
 golang.org/x/net/context
-# golang.org/x/oauth2 v0.27.0
-## explicit; go 1.23.0
+# golang.org/x/oauth2 v0.32.0
+## explicit; go 1.24.0
 golang.org/x/oauth2
 golang.org/x/oauth2/clientcredentials
 golang.org/x/oauth2/internal
+# golang.org/x/sys v0.37.0
+## explicit; go 1.24.0
+golang.org/x/sys/unix
+# gopkg.in/yaml.v2 v2.4.0
+## explicit; go 1.15
+gopkg.in/yaml.v2
