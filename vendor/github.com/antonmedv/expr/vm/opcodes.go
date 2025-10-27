@@ -1,11 +1,23 @@
 package vm
 
+type Opcode byte
+
 const (
-	OpPush byte = iota
+	OpInvalid Opcode = iota
+	OpPush
+	OpInt
 	OpPop
-	OpRot
+	OpStore
+	OpLoadVar
+	OpLoadConst
+	OpLoadField
+	OpLoadFast
+	OpLoadMethod
+	OpLoadFunc
+	OpLoadEnv
 	OpFetch
-	OpFetchMap
+	OpFetchField
+	OpMethod
 	OpTrue
 	OpFalse
 	OpNil
@@ -17,6 +29,9 @@ const (
 	OpJump
 	OpJumpIfTrue
 	OpJumpIfFalse
+	OpJumpIfNil
+	OpJumpIfNotNil
+	OpJumpIfEnd
 	OpJumpBackward
 	OpIn
 	OpLess
@@ -35,19 +50,34 @@ const (
 	OpContains
 	OpStartsWith
 	OpEndsWith
-	OpIndex
 	OpSlice
-	OpProperty
 	OpCall
+	OpCall0
+	OpCall1
+	OpCall2
+	OpCall3
+	OpCallN
 	OpCallFast
-	OpMethod
+	OpCallTyped
+	OpCallBuiltin1
 	OpArray
 	OpMap
 	OpLen
 	OpCast
-	OpStore
-	OpLoad
-	OpInc
+	OpDeref
+	OpIncrementIndex
+	OpDecrementIndex
+	OpIncrementCount
+	OpGetIndex
+	OpSetIndex
+	OpGetCount
+	OpGetLen
+	OpGetGroupBy
+	OpGetAcc
+	OpPointer
+	OpThrow
+	OpGroupBy
+	OpSetAcc
 	OpBegin
 	OpEnd // This opcode must be at the end of this list.
 )

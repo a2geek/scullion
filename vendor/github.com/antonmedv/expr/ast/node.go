@@ -13,10 +13,10 @@ type Node interface {
 	SetLocation(file.Location)
 	Type() reflect.Type
 	SetType(reflect.Type)
+	String() string
 }
 
 func Patch(node *Node, newNode Node) {
-	newNode.SetType((*node).Type())
 	newNode.SetLocation((*node).Location())
 	*node = newNode
 }
@@ -48,7 +48,19 @@ type NilNode struct {
 
 type IdentifierNode struct {
 	base
-	Value string
+	Value       string
+	FieldIndex  []int
+	Method      bool // true if method, false if field
+	MethodIndex int  // index of method, set only if Method is true
+}
+
+func (n *IdentifierNode) SetFieldIndex(field []int) {
+	n.FieldIndex = field
+}
+
+func (n *IdentifierNode) SetMethodIndex(methodIndex int) {
+	n.Method = true
+	n.MethodIndex = methodIndex
 }
 
 type IntegerNode struct {
@@ -73,7 +85,7 @@ type StringNode struct {
 
 type ConstantNode struct {
 	base
-	Value interface{}
+	Value any
 }
 
 type UnaryNode struct {
@@ -84,28 +96,37 @@ type UnaryNode struct {
 
 type BinaryNode struct {
 	base
+	Regexp   *regexp.Regexp
 	Operator string
 	Left     Node
 	Right    Node
 }
 
-type MatchesNode struct {
+type ChainNode struct {
 	base
-	Regexp *regexp.Regexp
-	Left   Node
-	Right  Node
+	Node Node
 }
 
-type PropertyNode struct {
+type MemberNode struct {
 	base
-	Node     Node
-	Property string
+	Node       Node
+	Property   Node
+	Name       string // Name of the filed or method. Used for error reporting.
+	Optional   bool
+	FieldIndex []int
+
+	// TODO: Combine Method and MethodIndex into a single MethodIndex field of &int type.
+	Method      bool
+	MethodIndex int
 }
 
-type IndexNode struct {
-	base
-	Node  Node
-	Index Node
+func (n *MemberNode) SetFieldIndex(field []int) {
+	n.FieldIndex = field
+}
+
+func (n *MemberNode) SetMethodIndex(methodIndex int) {
+	n.Method = true
+	n.MethodIndex = methodIndex
 }
 
 type SliceNode struct {
@@ -115,24 +136,21 @@ type SliceNode struct {
 	To   Node
 }
 
-type MethodNode struct {
+type CallNode struct {
 	base
-	Node      Node
-	Method    string
+	Callee    Node
 	Arguments []Node
-}
-
-type FunctionNode struct {
-	base
-	Name      string
-	Arguments []Node
+	Typed     int
 	Fast      bool
+	Func      *Function
 }
 
 type BuiltinNode struct {
 	base
 	Name      string
 	Arguments []Node
+	Throws    bool
+	Map       Node
 }
 
 type ClosureNode struct {
@@ -142,6 +160,7 @@ type ClosureNode struct {
 
 type PointerNode struct {
 	base
+	Name string
 }
 
 type ConditionalNode struct {
@@ -149,6 +168,13 @@ type ConditionalNode struct {
 	Cond Node
 	Exp1 Node
 	Exp2 Node
+}
+
+type VariableDeclaratorNode struct {
+	base
+	Name  string
+	Value Node
+	Expr  Node
 }
 
 type ArrayNode struct {
