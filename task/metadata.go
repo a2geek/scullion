@@ -8,10 +8,10 @@ import (
 	"scullion/option"
 	"time"
 
+	"github.com/canonical/lxd/shared/logger"
 	"github.com/cloudfoundry-community/go-cfclient"
 	"github.com/expr-lang/expr"
 	"github.com/expr-lang/expr/vm"
-	"github.com/lxc/lxd/shared/logger"
 )
 
 type Metadata struct {
