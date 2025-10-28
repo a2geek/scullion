@@ -29,9 +29,9 @@ func (cmd *Disassemble) Execute(args []string) error {
 			continue
 		}
 
-		fmt.Printf("['%s' : org]\n%s\n\n", taskDef.Name, m.OrgExpr.Disassemble())
-		fmt.Printf("['%s' : space]\n%s\n\n", taskDef.Name, m.SpaceExpr.Disassemble())
-		fmt.Printf("['%s' : app]\n%s\n\n", taskDef.Name, m.AppExpr.Disassemble())
+		fmt.Printf("['%s' : org (src={%s})]\n%s\n\n", taskDef.Name, taskDef.Filters.Organization, m.OrgExpr.Disassemble())
+		fmt.Printf("['%s' : space (src={%s})]\n%s\n\n", taskDef.Name, taskDef.Filters.Space, m.SpaceExpr.Disassemble())
+		fmt.Printf("['%s' : app (src={%s})]\n%s\n\n", taskDef.Name, taskDef.Filters.Application, m.AppExpr.Disassemble())
 	}
 	return nil
 }

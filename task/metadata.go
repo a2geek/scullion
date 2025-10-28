@@ -8,9 +8,9 @@ import (
 	"scullion/option"
 	"time"
 
-	"github.com/antonmedv/expr"
-	"github.com/antonmedv/expr/vm"
 	"github.com/cloudfoundry-community/go-cfclient"
+	"github.com/expr-lang/expr"
+	"github.com/expr-lang/expr/vm"
 	"github.com/lxc/lxd/shared/logger"
 )
 
@@ -166,7 +166,7 @@ func toMap(obj interface{}) (map[string]interface{}, error) {
 	return theMap, err
 }
 
-// See: https://github.com/antonmedv/expr/blob/master/docs/examples/dates_test.go
+// See: https://github.com/expr-lang/expr/blob/master/docs/examples/dates_test.go
 type datetime struct {
 	logger log.Logger
 }

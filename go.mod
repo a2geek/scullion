@@ -3,8 +3,8 @@ module scullion
 go 1.24.0
 
 require (
-	github.com/antonmedv/expr v1.15.5
 	github.com/cloudfoundry-community/go-cfclient v0.0.0-20220930021109-9c4e6c59ccf1
+	github.com/expr-lang/expr v1.17.6
 	github.com/jessevdk/go-flags v1.6.1
 	github.com/lxc/lxd v0.0.0-20200411180253-b2cc12460924
 )
