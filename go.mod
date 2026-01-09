@@ -5,7 +5,7 @@ go 1.25.3
 require (
 	github.com/canonical/lxd v0.0.0-20251027220609-7c90b22f182a
 	github.com/cloudfoundry-community/go-cfclient v0.0.0-20220930021109-9c4e6c59ccf1
-	github.com/expr-lang/expr v1.17.6
+	github.com/expr-lang/expr v1.17.7
 	github.com/jessevdk/go-flags v1.6.1
 )
 
